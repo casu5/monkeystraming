@@ -31,6 +31,17 @@ if (!function_exists('isLoggedIn')) {
     }
 }
 
+if (!function_exists('normalizeUserRole')) {
+    function normalizeUserRole(?string $role): string
+    {
+        $role = strtolower(trim((string)$role));
+        if ($role === 'user' || $role === 'usuario' || $role === 'customer') return 'cliente';
+        if ($role === 'seller') return 'vendedor';
+        if (in_array($role, ['admin', 'vendedor', 'cliente'], true)) return $role;
+        return 'cliente';
+    }
+}
+
 if (!function_exists('requireLogin')) {
     function requireLogin(?string $redirectTo = null): void
     {
@@ -50,12 +61,36 @@ if (!function_exists('requireLogin')) {
 if (!function_exists('requireAdmin')) {
     function requireAdmin(): void
     {
+        requireRole('admin');
+    }
+}
+
+if (!function_exists('requireRole')) {
+    function requireRole($roles): void
+    {
         requireLogin();
-        $role = strtoupper((string)($_SESSION['user_role'] ?? ''));
-        if ($role !== 'ADMIN') {
+
+        $allowed = is_array($roles) ? $roles : [$roles];
+        $allowed = array_map('normalizeUserRole', $allowed);
+        $role = normalizeUserRole($_SESSION['user_role'] ?? '');
+
+        if (!in_array($role, $allowed, true)) {
             http_response_code(403);
             die('Acceso denegado');
         }
+    }
+}
+
+if (!function_exists('hasRole')) {
+    function hasRole($roles): bool
+    {
+        if (!isLoggedIn()) return false;
+
+        $allowed = is_array($roles) ? $roles : [$roles];
+        $allowed = array_map('normalizeUserRole', $allowed);
+        $role = normalizeUserRole($_SESSION['user_role'] ?? '');
+
+        return in_array($role, $allowed, true);
     }
 }
 
@@ -87,13 +122,16 @@ if (!function_exists('getCurrentUser')) {
         $name  = $user['nombre'] ?? $user['full_name'] ?? $user['name'] ?? '';
         $email = $user['email'] ?? '';
         $saldo = isset($user['saldo']) ? (float)$user['saldo'] : (isset($user['balance']) ? (float)$user['balance'] : 0.0);
-        $role  = $user['rol'] ?? $user['role'] ?? $user['user_role'] ?? ($_SESSION['user_role'] ?? 'USER');
+        $role  = normalizeUserRole($user['rol'] ?? $user['role'] ?? $user['user_role'] ?? ($_SESSION['user_role'] ?? 'cliente'));
 
         $_SESSION['user_id']    = $userId;
         $_SESSION['user_name']  = (string)$name;
         $_SESSION['user_email'] = (string)$email;
         $_SESSION['user_saldo'] = $saldo;
-        $_SESSION['user_role']  = (string)$role;
+        $_SESSION['user_role']  = $role;
+
+        $user['role'] = $role;
+        $user['rol'] = $role;
 
         return $user;
     }

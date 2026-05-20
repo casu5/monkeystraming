@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id']    = $usuario['id'];
                 $_SESSION['user_name']  = $usuario['nombre'];
                 $_SESSION['user_email'] = $usuario['email'];
-                $_SESSION['user_role']  = $usuario['role'];
+                $_SESSION['user_role']  = normalizeUserRole($usuario['role'] ?? 'cliente');
                 $_SESSION['user_saldo'] = $usuario['saldo'];
                 $_SESSION['logged_in']  = true;
 
@@ -50,8 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
 
               
-                if ($usuario['role'] === 'admin') {
+                if ($_SESSION['user_role'] === 'admin') {
                     redirect('../admin/index.php');
+                } elseif ($_SESSION['user_role'] === 'vendedor') {
+                    redirect('../vendedor/dashboard.php');
                 } else {
                     redirect('../user/dashboard.php');
                 }

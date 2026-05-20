@@ -6,9 +6,11 @@ $page_title = "Iniciar sesión - Monkeystraming";
 
 // ✅ Si ya está logueado, redirigir según rol
 if (isLoggedIn()) {
-    $role = strtolower((string)($_SESSION['user_role'] ?? ''));
+    $role = normalizeUserRole($_SESSION['user_role'] ?? '');
     if ($role === 'admin') {
         redirect('admin/index.php');
+    } elseif ($role === 'vendedor') {
+        redirect('vendedor/dashboard.php');
     } else {
         redirect('index.php');
     }
@@ -54,22 +56,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user = $result->fetch_assoc()) {
 
                 if (password_verify($password, $user['password'])) {
+                    $role = normalizeUserRole($user['role'] ?? 'cliente');
 
                     // ✅ Sesión normal (USER/ADMIN)
                     $_SESSION['user_id']    = $user['id'];
                     $_SESSION['user_name']  = $user['nombre'];
                     $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['user_role']  = $user['role'];
+                    $_SESSION['user_role']  = $role;
                     $_SESSION['user_saldo'] = $user['saldo'];
 
                     // ✅ Compatibilidad: si es admin, también setear sesión admin
-                    if (strtolower((string)$user['role']) === 'admin') {
+                    if ($role === 'admin') {
                         $_SESSION['admin_id']    = $user['id'];
                         $_SESSION['admin_email'] = $user['email'];
                         $_SESSION['admin_name']  = $user['nombre'];
                         $_SESSION['admin_table'] = 'usuarios';
 
                         redirect('admin/index.php');
+                    } elseif ($role === 'vendedor') {
+                        redirect('vendedor/dashboard.php');
                     } else {
                         redirect('index.php');
                     }

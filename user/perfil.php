@@ -178,7 +178,7 @@ include '../includes/header.php';
                 <div class="profile-info-row">
                     <span class="label">Rol:</span>
                     <span class="value">
-                        <?php echo $usuario['role'] === 'admin' ? 'Administrador' : 'Usuario'; ?>
+                        <?php echo function_exists('roleLabel') ? roleLabel($usuario['role'] ?? '') : ucfirst((string)($usuario['role'] ?? 'cliente')); ?>
                     </span>
                 </div>
                 <div class="profile-info-row">

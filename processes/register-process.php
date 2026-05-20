@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Insertar usuario
     $sql = "INSERT INTO usuarios (nombre, email, password, role, saldo) 
-            VALUES (?, ?, ?, 'user', 0.00)";
+            VALUES (?, ?, ?, 'cliente', 0.00)";
     $stmt = $conexion->prepare($sql);
     $stmt->bind_param("sss", $nombre, $email, $hashed_password);
 

@@ -35,7 +35,7 @@ $db_config = [
 ];
 
 
-
+// Conexión mysqli (variable estándar del proyecto)
 $conexion = new mysqli(
     $db_config['host'],
     $db_config['user'],
@@ -74,6 +74,10 @@ function normalizeSessionKeys(): void
         if (!empty($_SESSION['usuario_role'])) $_SESSION['user_role'] = $_SESSION['usuario_role'];
     }
 
+    if (!empty($_SESSION['user_role'])) {
+        $_SESSION['user_role'] = normalizeUserRole((string)$_SESSION['user_role']);
+    }
+
     // Name/email/saldo (si existieran con otros nombres)
     if (empty($_SESSION['user_name']) && !empty($_SESSION['nombre'])) $_SESSION['user_name'] = $_SESSION['nombre'];
     if (empty($_SESSION['user_email']) && !empty($_SESSION['email'])) $_SESSION['user_email'] = $_SESSION['email'];
@@ -93,6 +97,37 @@ function db(): mysqli
     /** @var mysqli $conexion */
     global $conexion;
     return $conexion;
+}
+
+/**
+ * Roles oficiales del marketplace.
+ * Compatibilidad: "user" queda como "cliente".
+ */
+function normalizeUserRole(?string $role): string
+{
+    $role = strtolower(trim((string)$role));
+
+    if ($role === 'user' || $role === 'usuario' || $role === 'customer') {
+        return 'cliente';
+    }
+
+    if ($role === 'seller') {
+        return 'vendedor';
+    }
+
+    if (in_array($role, ['admin', 'vendedor', 'cliente'], true)) {
+        return $role;
+    }
+
+    return 'cliente';
+}
+
+function roleLabel(?string $role): string
+{
+    $role = normalizeUserRole($role);
+    if ($role === 'admin') return 'Administrador';
+    if ($role === 'vendedor') return 'Vendedor';
+    return 'Cliente';
 }
 
 /**
@@ -137,7 +172,7 @@ function redirectTo(string $url): void
 function setUserSession(array $userRow): void
 {
     $_SESSION['user_id']    = $userRow['id'] ?? null;
-    $_SESSION['user_role']  = $userRow['role'] ?? 'user';
+    $_SESSION['user_role']  = normalizeUserRole($userRow['role'] ?? 'cliente');
     $_SESSION['user_name']  = $userRow['nombre'] ?? ($userRow['name'] ?? '');
     $_SESSION['user_email'] = $userRow['email'] ?? '';
     $_SESSION['user_saldo'] = $userRow['saldo'] ?? 0;
@@ -163,14 +198,47 @@ function requireLogin(string $redirectUrl = '/login.php'): void
  */
 function requireAdmin(string $redirectUrl = '/login.php'): void
 {
+    requireRole('admin', $redirectUrl);
+}
+
+function requireRole($roles, string $redirectUrl = '/login.php'): void
+{
     requireLogin($redirectUrl);
 
-    $role = strtolower((string)($_SESSION['user_role'] ?? ''));
-    if ($role !== 'admin') {
-        // Puedes mandarlo a dashboard o 403
+    $allowed = is_array($roles) ? $roles : [$roles];
+    $allowed = array_map('normalizeUserRole', $allowed);
+    $role = normalizeUserRole($_SESSION['user_role'] ?? '');
+
+    if (!in_array($role, $allowed, true)) {
         http_response_code(403);
-        die('Acceso denegado (solo admin).');
+        die('Acceso denegado.');
     }
+}
+
+function hasRole($roles): bool
+{
+    if (empty($_SESSION['user_id'])) return false;
+
+    $allowed = is_array($roles) ? $roles : [$roles];
+    $allowed = array_map('normalizeUserRole', $allowed);
+    $role = normalizeUserRole($_SESSION['user_role'] ?? '');
+
+    return in_array($role, $allowed, true);
+}
+
+function isAdmin(): bool
+{
+    return hasRole('admin');
+}
+
+function isSeller(): bool
+{
+    return hasRole('vendedor');
+}
+
+function isCustomer(): bool
+{
+    return hasRole('cliente');
 }
 
 /**
@@ -180,7 +248,7 @@ function currentUser(): array
 {
     return [
         'id'    => $_SESSION['user_id'] ?? null,
-        'role'  => $_SESSION['user_role'] ?? null,
+        'role'  => normalizeUserRole($_SESSION['user_role'] ?? null),
         'name'  => $_SESSION['user_name'] ?? null,
         'email' => $_SESSION['user_email'] ?? null,
         'saldo' => $_SESSION['user_saldo'] ?? null,

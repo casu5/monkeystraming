@@ -4,61 +4,85 @@ require_once __DIR__ . '/includes/auth.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 
-$DEBUG = true; // ponlo false cuando ya funcione
+$DEBUG = true;
 
-function respond(array $data, int $http = 200): void {
+function respond(array $data, int $http = 200): void
+{
     http_response_code($http);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-$action     = $_POST['action'] ?? 'buy';
+function tableExistsLocal(mysqli $cx, string $table): bool
+{
+    $t = $cx->real_escape_string($table);
+    $rs = $cx->query("SHOW TABLES LIKE '$t'");
+    return ($rs && $rs->num_rows > 0);
+}
+
+function colExistsLocal(mysqli $cx, string $table, string $col): bool
+{
+    $t = $cx->real_escape_string($table);
+    $c = $cx->real_escape_string($col);
+    $rs = $cx->query("SHOW COLUMNS FROM `$t` LIKE '$c'");
+    return ($rs && $rs->num_rows > 0);
+}
+
+$action = $_POST['action'] ?? 'buy';
 $product_id = (int)($_POST['product_id'] ?? 0);
 
 if (!function_exists('isLoggedIn') || !isLoggedIn()) {
-    respond(['ok'=>false,'code'=>'NOT_LOGGED','message'=>'Debes iniciar sesión.','redirect'=>'login.php'], 401);
+    respond(['ok' => false, 'code' => 'NOT_LOGGED', 'message' => 'Debes iniciar sesion.', 'redirect' => 'login.php'], 401);
 }
 
-$u   = getCurrentUser();
+$u = getCurrentUser();
 $uid = (int)($u['id'] ?? 0);
 if ($uid <= 0) {
-    respond(['ok'=>false,'code'=>'NOT_LOGGED','message'=>'Sesión inválida.','redirect'=>'login.php'], 401);
+    respond(['ok' => false, 'code' => 'NOT_LOGGED', 'message' => 'Sesion invalida.', 'redirect' => 'login.php'], 401);
 }
 
 if ($product_id <= 0) {
-    respond(['ok'=>false,'code'=>'BAD_PRODUCT','message'=>'Producto inválido.'], 400);
+    respond(['ok' => false, 'code' => 'BAD_PRODUCT', 'message' => 'Producto invalido.'], 400);
 }
 
 try {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-    // Carrito placeholder
+    $productosHasVendedor = colExistsLocal($conexion, 'productos', 'vendedor_id');
+    $productosHasDuracion = colExistsLocal($conexion, 'productos', 'duracion_dias');
+    $cuentasHasVendedor = colExistsLocal($conexion, 'cuentas', 'vendedor_id');
+    $comprasHasCliente = colExistsLocal($conexion, 'compras', 'cliente_id');
+    $comprasHasVendedor = colExistsLocal($conexion, 'compras', 'vendedor_id');
+    $comprasHasCuenta = colExistsLocal($conexion, 'compras', 'cuenta_id');
+    $comprasHasPerfil = colExistsLocal($conexion, 'compras', 'perfil_id');
+    $comprasHasComision = colExistsLocal($conexion, 'compras', 'comision_admin');
+    $comprasHasMontoVendedor = colExistsLocal($conexion, 'compras', 'monto_vendedor');
+
     if ($action === 'add_to_cart') {
-        respond(['ok'=>true,'message'=>'Añadido (placeholder).']);
+        respond(['ok' => true, 'message' => 'Anadido (placeholder).']);
     }
 
-    // 1) Producto
-    $stmtP = $conexion->prepare("SELECT id, nombre, precio FROM productos WHERE id=? AND activo=1 LIMIT 1");
+    $selectVendedor = $productosHasVendedor ? 'vendedor_id' : 'NULL AS vendedor_id';
+    $selectDuracion = $productosHasDuracion ? 'duracion_dias' : '30 AS duracion_dias';
+    $stmtP = $conexion->prepare("SELECT id, nombre, precio, $selectVendedor, $selectDuracion FROM productos WHERE id=? AND activo=1 LIMIT 1");
     $stmtP->bind_param("i", $product_id);
     $stmtP->execute();
     $prod = $stmtP->get_result()->fetch_assoc();
     $stmtP->close();
 
     if (!$prod) {
-        respond(['ok'=>false,'code'=>'NOT_FOUND','message'=>'Producto no existe o no está activo.'], 404);
+        respond(['ok' => false, 'code' => 'NOT_FOUND', 'message' => 'Producto no existe o no esta activo.'], 404);
     }
 
     $precio = (float)$prod['precio'];
     $nombreProducto = (string)$prod['nombre'];
-
-    // ✅ FECHA DE VENCIMIENTO (30 días después)
-    $duracionDias = 30;
+    $vendedorId = isset($prod['vendedor_id']) ? (int)$prod['vendedor_id'] : null;
+    $duracionDias = max(1, (int)($prod['duracion_dias'] ?? 30));
     $venceAt = date('Y-m-d H:i:s', time() + ($duracionDias * 86400));
-    $fecha_compra = date('Y-m-d H:i:s'); // Fecha actual
+    $fecha_compra = date('Y-m-d H:i:s');
 
     $conexion->begin_transaction();
 
-    // 2) Lock saldo usuario
     $stmtS = $conexion->prepare("SELECT saldo FROM usuarios WHERE id=? FOR UPDATE");
     $stmtS->bind_param("i", $uid);
     $stmtS->execute();
@@ -72,12 +96,12 @@ try {
     $saldo = (float)$rowS['saldo'];
     if ($saldo < $precio) {
         $conexion->rollback();
-        respond(['ok'=>false,'code'=>'SALDO_INSUFICIENTE','message'=>'Saldo insuficiente.','redirect'=>'recargar.php'], 409);
+        respond(['ok' => false, 'code' => 'SALDO_INSUFICIENTE', 'message' => 'Saldo insuficiente.', 'redirect' => 'recargar.php'], 409);
     }
 
-    // 3) Tomar 1 PERFIL disponible del producto (lock)
+    $sellerFilter = ($cuentasHasVendedor && $vendedorId) ? " AND c.vendedor_id = ? " : "";
     $stmtPick = $conexion->prepare("
-        SELECT 
+        SELECT
             cp.id AS perfil_id,
             cp.perfil_nombre,
             c.id AS cuenta_id,
@@ -88,28 +112,32 @@ try {
         FROM cuenta_perfiles cp
         JOIN cuentas c ON c.id = cp.cuenta_id
         WHERE c.producto_id = ?
+          $sellerFilter
           AND c.estado = 'DISPONIBLE'
           AND cp.estado = 'DISPONIBLE'
         ORDER BY cp.id ASC
         LIMIT 1
         FOR UPDATE
     ");
-    $stmtPick->bind_param("i", $product_id);
+    if ($cuentasHasVendedor && $vendedorId) {
+        $stmtPick->bind_param("ii", $product_id, $vendedorId);
+    } else {
+        $stmtPick->bind_param("i", $product_id);
+    }
     $stmtPick->execute();
     $stock = $stmtPick->get_result()->fetch_assoc();
     $stmtPick->close();
 
     if (!$stock) {
         $conexion->rollback();
-        respond(['ok'=>false,'code'=>'SIN_STOCK','message'=>'Este producto no tiene stock disponible.'], 409);
+        respond(['ok' => false, 'code' => 'SIN_STOCK', 'message' => 'Este producto no tiene stock disponible.'], 409);
     }
 
     $perfilId = (int)$stock['perfil_id'];
 
-    // 4) Marcar perfil como vendido (sin compras aún)
     $stmtV = $conexion->prepare("
         UPDATE cuenta_perfiles
-        SET 
+        SET
             estado = 'VENDIDO',
             vendido_a_usuario_id = ?,
             compra_item_id = NULL,
@@ -123,48 +151,88 @@ try {
 
     if ($stmtV->affected_rows <= 0) {
         $stmtV->close();
-        throw new Exception("No se pudo reservar el perfil (venta simultánea o estado cambió).");
+        throw new Exception("No se pudo reservar el perfil.");
     }
     $stmtV->close();
 
-    // 5) Descontar saldo
     $stmtU = $conexion->prepare("UPDATE usuarios SET saldo = saldo - ? WHERE id=?");
     $stmtU->bind_param("di", $precio, $uid);
     $stmtU->execute();
     $stmtU->close();
 
-    // ✅✅✅ CORRECCIÓN: INSERTAR EN TABLA COMPRAS CON FECHA VENCIMIENTO ✅✅✅
-    $stmtCompra = $conexion->prepare("
-        INSERT INTO compras (
-            usuario_id, 
-            producto_id, 
-            monto, 
-            estado, 
-            fecha_compra, 
-            fecha_vencimiento  -- ✅ NUEVA COLUMNA
-        ) VALUES (?, ?, ?, 'completada', ?, ?)
-    ");
-    $stmtCompra->bind_param("iidss", $uid, $product_id, $precio, $fecha_compra, $venceAt);
+    $compraCols = ['usuario_id', 'producto_id', 'monto', 'estado', 'fecha_compra', 'fecha_vencimiento'];
+    $compraVals = ['?', '?', '?', "'completada'", '?', '?'];
+    $types = 'iidss';
+    $bind = [$uid, $product_id, $precio, $fecha_compra, $venceAt];
+
+    if ($comprasHasCliente) {
+        array_unshift($compraCols, 'cliente_id');
+        array_unshift($compraVals, '?');
+        $types = 'i' . $types;
+        array_unshift($bind, $uid);
+    }
+    if ($comprasHasVendedor) {
+        $compraCols[] = 'vendedor_id';
+        $compraVals[] = '?';
+        $types .= 'i';
+        $bind[] = (int)($vendedorId ?? 0);
+    }
+    if ($comprasHasCuenta) {
+        $compraCols[] = 'cuenta_id';
+        $compraVals[] = '?';
+        $types .= 'i';
+        $bind[] = (int)$stock['cuenta_id'];
+    }
+    if ($comprasHasPerfil) {
+        $compraCols[] = 'perfil_id';
+        $compraVals[] = '?';
+        $types .= 'i';
+        $bind[] = $perfilId;
+    }
+    if ($comprasHasComision) {
+        $compraCols[] = 'comision_admin';
+        $compraVals[] = '?';
+        $types .= 'd';
+        $bind[] = 0.00;
+    }
+    if ($comprasHasMontoVendedor) {
+        $compraCols[] = 'monto_vendedor';
+        $compraVals[] = '?';
+        $types .= 'd';
+        $bind[] = $precio;
+    }
+
+    $stmtCompra = $conexion->prepare(
+        "INSERT INTO compras (" . implode(', ', $compraCols) . ") VALUES (" . implode(', ', $compraVals) . ")"
+    );
+    $stmtCompra->bind_param($types, ...$bind);
     $stmtCompra->execute();
     $compra_id = $stmtCompra->insert_id;
     $stmtCompra->close();
 
-    // ✅ ACTUALIZAR perfil con el ID de la compra
-    $stmtUpdatePerfil = $conexion->prepare("
-        UPDATE cuenta_perfiles
-        SET compra_item_id = ?
-        WHERE id = ?
-    ");
+    $stmtUpdatePerfil = $conexion->prepare("UPDATE cuenta_perfiles SET compra_item_id = ? WHERE id = ?");
     $stmtUpdatePerfil->bind_param("ii", $compra_id, $perfilId);
     $stmtUpdatePerfil->execute();
     $stmtUpdatePerfil->close();
 
-    // 6) Obtener fechas reales
     $stmtF = $conexion->prepare("SELECT vendido_at, vence_at FROM cuenta_perfiles WHERE id=? LIMIT 1");
     $stmtF->bind_param("i", $perfilId);
     $stmtF->execute();
     $fechas = $stmtF->get_result()->fetch_assoc();
     $stmtF->close();
+
+    if (tableExistsLocal($conexion, 'saldo_movimientos')) {
+        $saldoNuevo = $saldo - $precio;
+        $nota = 'Compra de ' . $nombreProducto;
+        $stmtMov = $conexion->prepare("
+            INSERT INTO saldo_movimientos
+                (usuario_id, actor_id, tipo, monto, saldo_anterior, saldo_nuevo, referencia_tipo, referencia_id, nota)
+            VALUES (?, ?, 'compra', ?, ?, ?, 'compras', ?, ?)
+        ");
+        $stmtMov->bind_param("iidddis", $uid, $uid, $precio, $saldo, $saldoNuevo, $compra_id, $nota);
+        $stmtMov->execute();
+        $stmtMov->close();
+    }
 
     $conexion->commit();
 
@@ -174,30 +242,30 @@ try {
         'compra_id' => $compra_id,
         'purchase' => [
             'producto_id' => $product_id,
+            'vendedor_id' => $vendedorId,
             'producto_nombre' => $nombreProducto,
             'fecha_compra' => $fechas['vendido_at'] ?? $fecha_compra,
-            'vence_at'     => $fechas['vence_at'] ?? $venceAt,
+            'vence_at' => $fechas['vence_at'] ?? $venceAt,
             'credenciales' => [
-                'login_user'    => $stock['login_user'],
-                'login_pass'    => $stock['login_pass'],
-                'pin'           => $stock['pin'],
+                'login_user' => $stock['login_user'],
+                'login_pass' => $stock['login_pass'],
+                'pin' => $stock['pin'],
                 'perfil_nombre' => $stock['perfil_nombre'],
-                'max_perfiles'  => (int)$stock['max_perfiles'],
-            ]
-        ]
+                'max_perfiles' => (int)$stock['max_perfiles'],
+            ],
+        ],
     ]);
-
 } catch (Throwable $e) {
     if (isset($conexion) && $conexion instanceof mysqli) {
-        try { $conexion->rollback(); } catch(Throwable $x) {}
+        try { $conexion->rollback(); } catch (Throwable $x) {}
     }
 
-    $out = ['ok'=>false,'code'=>'ERROR','message'=>'Error al procesar compra.'];
+    $out = ['ok' => false, 'code' => 'ERROR', 'message' => 'Error al procesar compra.'];
     if ($DEBUG) {
         $out['debug'] = [
             'error' => $e->getMessage(),
-            'file'  => basename($e->getFile()),
-            'line'  => $e->getLine(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine(),
         ];
     }
     respond($out, 500);

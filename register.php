@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Insertar usuario en BD CON WHATSAPP
         $sql  = "INSERT INTO usuarios (nombre, email, whatsapp, password, role, saldo) 
-                 VALUES (?, ?, ?, ?, 'user', 0.00)";
+                 VALUES (?, ?, ?, ?, 'cliente', 0.00)";
         $stmt = $conexion->prepare($sql);
 
         if ($stmt) {
