@@ -448,6 +448,9 @@ $adminEmail = $admin['email'] ?? '';
                 <i class="fas fa-users"></i><span>Usuarios</span>
                 <span class="menu-badge"><?php echo (int)$estadisticas['usuarios_nuevos_hoy']; ?></span>
             </a>
+                        <a href="vendedores.php" class="menu-item">
+                <i class="fas fa-user-tie"></i><span>Vendedores</span>
+            </a>
             <a href="productos-admin.php" class="menu-item">
                 <i class="fas fa-box-open"></i><span>Productos</span>
                 <span class="menu-badge"><?php echo (int)$estadisticas['productos_agotados']; ?></span>
