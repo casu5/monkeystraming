@@ -10,13 +10,23 @@ function tableExistsAdminSellers(mysqli $cx, string $table): bool {
     $rs = $cx->query("SHOW TABLES LIKE '$t'");
     return ($rs && $rs->num_rows > 0);
 }
+function colExistsAdminSellers(mysqli $cx, string $table, string $col): bool {
+    $t = $cx->real_escape_string($table);
+    $c = $cx->real_escape_string($col);
+    $rs = $cx->query("SHOW COLUMNS FROM `$t` LIKE '$c'");
+    return ($rs && $rs->num_rows > 0);
+}
 
 $admin = getCurrentUser();
 $adminId = (int)($admin['id'] ?? $_SESSION['user_id'] ?? 0);
 $success = '';
 $error = '';
+$migrationReady = tableExistsAdminSellers($conexion, 'vendedor_perfiles')
+    && colExistsAdminSellers($conexion, 'usuarios', 'created_by')
+    && colExistsAdminSellers($conexion, 'productos', 'vendedor_id')
+    && colExistsAdminSellers($conexion, 'compras', 'vendedor_id');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($migrationReady && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim((string)($_POST['nombre'] ?? ''));
     $email = trim((string)($_POST['email'] ?? ''));
     $whatsapp = trim((string)($_POST['whatsapp'] ?? ''));
@@ -78,23 +88,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $vendedores = [];
-$sql = "
-    SELECT u.id, u.nombre, u.email, u.whatsapp, u.estado, u.created_at,
-           vp.tienda_nombre,
-           COUNT(DISTINCT p.id) AS productos,
-           COUNT(DISTINCT c.id) AS ventas,
-           COALESCE(SUM(c.monto), 0) AS vendido
-    FROM usuarios u
-    LEFT JOIN vendedor_perfiles vp ON vp.vendedor_id = u.id
-    LEFT JOIN productos p ON p.vendedor_id = u.id
-    LEFT JOIN compras c ON c.vendedor_id = u.id AND c.estado = 'completada'
-    WHERE u.role = 'vendedor'
-    GROUP BY u.id, u.nombre, u.email, u.whatsapp, u.estado, u.created_at, vp.tienda_nombre
-    ORDER BY u.id DESC
-";
-$rs = $conexion->query($sql);
-if ($rs) {
-    while ($row = $rs->fetch_assoc()) $vendedores[] = $row;
+if ($migrationReady) {
+    $sql = "
+        SELECT u.id, u.nombre, u.email, u.whatsapp, u.estado, u.created_at,
+               vp.tienda_nombre,
+               COUNT(DISTINCT p.id) AS productos,
+               COUNT(DISTINCT c.id) AS ventas,
+               COALESCE(SUM(c.monto), 0) AS vendido
+        FROM usuarios u
+        LEFT JOIN vendedor_perfiles vp ON vp.vendedor_id = u.id
+        LEFT JOIN productos p ON p.vendedor_id = u.id
+        LEFT JOIN compras c ON c.vendedor_id = u.id AND c.estado = 'completada'
+        WHERE u.role = 'vendedor'
+        GROUP BY u.id, u.nombre, u.email, u.whatsapp, u.estado, u.created_at, vp.tienda_nombre
+        ORDER BY u.id DESC
+    ";
+    $rs = $conexion->query($sql);
+    if ($rs) {
+        while ($row = $rs->fetch_assoc()) $vendedores[] = $row;
+    }
 }
 
 $page_title = "Vendedores - Admin";
@@ -142,6 +154,7 @@ $page_title = "Vendedores - Admin";
 
   <?php if ($success): ?><div class="alert ok"><?php echo h($success); ?></div><?php endif; ?>
   <?php if ($error): ?><div class="alert err"><?php echo h($error); ?></div><?php endif; ?>
+  <?php if (!$migrationReady): ?><div class="alert err">Falta aplicar la migracion marketplace antes de crear vendedores.</div><?php endif; ?>
 
   <section class="grid">
     <form class="card" method="POST">
@@ -163,7 +176,7 @@ $page_title = "Vendedores - Admin";
       <label>Password temporal</label>
       <input name="password" type="password" required minlength="6">
 
-      <button class="btn primary" style="margin-top:16px;" type="submit"><i class="fas fa-user-plus"></i> Crear vendedor</button>
+      <button class="btn primary" style="margin-top:16px;" type="submit" <?php echo !$migrationReady ? 'disabled' : ''; ?>><i class="fas fa-user-plus"></i> Crear vendedor</button>
     </form>
 
     <div class="card">

@@ -112,12 +112,12 @@ $page_title = "Panel vendedor - Monkeystraming";
       <div class="card action">
         <h3>Mis productos</h3>
         <p>Crea y edita las cartillas que apareceran en el marketplace.</p>
-        <a class="btn primary" href="#"><i class="fas fa-plus"></i> Proximo modulo</a>
+        <a class="btn primary" href="productos.php"><i class="fas fa-plus"></i> Gestionar productos</a>
       </div>
       <div class="card action">
         <h3>Mi stock</h3>
         <p>Agrega cuentas, perfiles y credenciales propias para vender.</p>
-        <a class="btn primary" href="#"><i class="fas fa-key"></i> Proximo modulo</a>
+        <a class="btn primary" href="stock.php"><i class="fas fa-key"></i> Cargar stock</a>
       </div>
       <div class="card action">
         <h3>Mis ventas</h3>

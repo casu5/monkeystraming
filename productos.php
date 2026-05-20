@@ -42,6 +42,12 @@ if (tableExists($conexion, 'productos') && colExists($conexion, 'productos', 'st
 $has_tipo_venta = false;
 if (tableExists($conexion, 'productos') && colExists($conexion, 'productos', 'tipo_venta')) $has_tipo_venta = true;
 
+$has_vendedor_id = false;
+if (tableExists($conexion, 'productos') && colExists($conexion, 'productos', 'vendedor_id')) $has_vendedor_id = true;
+
+$has_estado_revision = false;
+if (tableExists($conexion, 'productos') && colExists($conexion, 'productos', 'estado_revision')) $has_estado_revision = true;
+
 $has_cuentas = tableExists($conexion, 'cuentas');
 $has_perfiles = tableExists($conexion, 'cuenta_perfiles');
 $cuentas_has_estado = $has_cuentas && colExists($conexion, 'cuentas', 'estado');
@@ -123,24 +129,34 @@ if ($categoria_activa) {
 
         // Subquery: cuentas disponibles (para productos tipo CUENTA / CUENTA_COMPLETA)
         $subCuentas = "
-            SELECT cu.producto_id, COUNT(*) AS cuentas_disp
+            SELECT cu.producto_id" . ($has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? ", cu.vendedor_id" : "") . ", COUNT(*) AS cuentas_disp
             FROM cuentas cu
             WHERE 1=1
         ";
         if ($cuentas_has_estado) $subCuentas .= " AND cu.estado = 'DISPONIBLE' ";
         if ($cuentas_has_modo_venta) $subCuentas .= " AND cu.modo_venta = 'CUENTA' ";
-        $subCuentas .= " GROUP BY cu.producto_id ";
+        $subCuentas .= " GROUP BY cu.producto_id" . ($has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? ", cu.vendedor_id" : "") . " ";
 
         // Subquery: perfiles disponibles (para productos tipo PERFIL)
         $subPerfiles = "
-            SELECT cu.producto_id, COUNT(*) AS perfiles_disp
+            SELECT cu.producto_id" . ($has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? ", cu.vendedor_id" : "") . ", COUNT(*) AS perfiles_disp
             FROM cuenta_perfiles cp
             INNER JOIN cuentas cu ON cu.id = cp.cuenta_id
             WHERE 1=1
               AND cp.estado = 'DISPONIBLE'
         ";
         if ($cuentas_has_estado) $subPerfiles .= " AND cu.estado = 'DISPONIBLE' ";
-        $subPerfiles .= " GROUP BY cu.producto_id ";
+        $subPerfiles .= " GROUP BY cu.producto_id" . ($has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? ", cu.vendedor_id" : "") . " ";
+
+        $hasSellerProfileTable = tableExists($conexion, 'vendedor_perfiles');
+        $sellerSelect = $has_vendedor_id ? ", p.vendedor_id, u.nombre AS vendedor_nombre" . ($hasSellerProfileTable ? ", vp.tienda_nombre" : ", NULL AS tienda_nombre") : "";
+        $sellerJoin = $has_vendedor_id ? "
+            LEFT JOIN usuarios u ON u.id = p.vendedor_id
+            " . ($hasSellerProfileTable ? "LEFT JOIN vendedor_perfiles vp ON vp.vendedor_id = p.vendedor_id" : "") . "
+        " : "";
+        $sellerStockJoinCt = $has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? " AND ct.vendedor_id = p.vendedor_id" : "";
+        $sellerStockJoinPf = $has_vendedor_id && colExists($conexion, 'cuentas', 'vendedor_id') ? " AND pf.vendedor_id = p.vendedor_id" : "";
+        $reviewWhere = $has_estado_revision ? " AND p.estado_revision = 'aprobado' " : "";
 
         $sqlProd = "
             SELECT
@@ -148,13 +164,16 @@ if ($categoria_activa) {
                 c.nombre AS categoria
                 " . ($has_tipo_venta ? ", p.tipo_venta" : "") . "
                 " . ($has_stock_col ? ", p.stock" : "") . "
+                $sellerSelect
                 , COALESCE(ct.cuentas_disp, 0) AS stock_cuentas
                 , COALESCE(pf.perfiles_disp, 0) AS stock_perfiles
             FROM productos p
             JOIN categorias c ON c.id = p.categoria_id
-            LEFT JOIN ($subCuentas) ct ON ct.producto_id = p.id
-            LEFT JOIN ($subPerfiles) pf ON pf.producto_id = p.id
+            $sellerJoin
+            LEFT JOIN ($subCuentas) ct ON ct.producto_id = p.id $sellerStockJoinCt
+            LEFT JOIN ($subPerfiles) pf ON pf.producto_id = p.id $sellerStockJoinPf
             WHERE p.activo = 1 AND p.categoria_id = ?
+            $reviewWhere
             ORDER BY p.id DESC
         ";
 
@@ -167,14 +186,25 @@ if ($categoria_activa) {
 
     } else {
         // Sin stock real: solo listamos productos activos (NO filtramos por stock)
+        $hasSellerProfileTable = tableExists($conexion, 'vendedor_perfiles');
+        $sellerSelect = $has_vendedor_id ? ", p.vendedor_id, u.nombre AS vendedor_nombre" . ($hasSellerProfileTable ? ", vp.tienda_nombre" : ", NULL AS tienda_nombre") : "";
+        $sellerJoin = $has_vendedor_id ? "
+            LEFT JOIN usuarios u ON u.id = p.vendedor_id
+            " . ($hasSellerProfileTable ? "LEFT JOIN vendedor_perfiles vp ON vp.vendedor_id = p.vendedor_id" : "") . "
+        " : "";
+        $reviewWhere = $has_estado_revision ? " AND p.estado_revision = 'aprobado' " : "";
+
         $sqlProd = "
             SELECT p.id, p.nombre, p.descripcion, p.precio, p.imagen_url,
                    c.nombre AS categoria
                    " . ($has_tipo_venta ? ", p.tipo_venta" : "") . "
                    " . ($has_stock_col ? ", p.stock" : "") . "
+                   $sellerSelect
             FROM productos p
             JOIN categorias c ON c.id = p.categoria_id
+            $sellerJoin
             WHERE p.activo = 1 AND p.categoria_id = ?
+            $reviewWhere
             ORDER BY p.id DESC
         ";
         $stmt = $conexion->prepare($sqlProd);
@@ -325,6 +355,10 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             font-size:.7rem;padding:4px 10px;border-radius:20px;font-weight:600;
             text-transform:uppercase;
         }
+        .seller-name{
+            display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;
+            color:#0de0c9;font-size:.82rem;font-weight:800;
+        }
         .producto-card h3{font-size:1.1rem;margin-bottom:8px;color:#fff;}
         .producto-card p{font-size:.9rem;color:#b4b4b4;margin-bottom:14px;}
         .producto-footer{
@@ -442,6 +476,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
                         $pnom  = (string)$producto['nombre'];
                         $pprec = (float)$producto['precio'];
                         $pdesc = (string)($producto['descripcion'] ?? '');
+                        $sellerName = (string)($producto['tienda_nombre'] ?? $producto['vendedor_nombre'] ?? '');
 
                         $tipoVenta = strtoupper((string)($producto['tipo_venta'] ?? 'PERFIL'));
 
@@ -470,6 +505,9 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
                                 <?php echo htmlspecialchars($badge); ?>
                             </span>
                         </div>
+                        <?php if ($sellerName !== ''): ?>
+                            <div class="seller-name"><i class="fas fa-store"></i> <?php echo htmlspecialchars($sellerName); ?></div>
+                        <?php endif; ?>
                         <h3><?php echo htmlspecialchars($pnom); ?></h3>
                         <p><?php echo htmlspecialchars($pdesc); ?></p>
                         <div class="producto-footer">
