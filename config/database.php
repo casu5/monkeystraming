@@ -35,7 +35,7 @@ $db_config = [
 ];
 
 
-// Conexión mysqli (variable estándar del proyecto)
+
 $conexion = new mysqli(
     $db_config['host'],
     $db_config['user'],
