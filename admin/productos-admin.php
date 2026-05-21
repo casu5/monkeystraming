@@ -1,6 +1,7 @@
 <?php
-// admin/productos-admin.php — CRUD REAL de productos (stock + activo + destacado) + Layout PRO
+// admin/productos-admin.php â€” CRUD REAL de productos (stock + activo + destacado) + Layout PRO
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -61,7 +62,7 @@ function requireAdminHard(): void {
     }
     if (!function_exists('isLoggedIn') || !function_exists('getCurrentUser')) {
         http_response_code(500);
-        die('Faltan helpers de sesión (isLoggedIn/getCurrentUser).');
+        die('Faltan helpers de sesiÃ³n (isLoggedIn/getCurrentUser).');
     }
     if (!isLoggedIn()) {
         header('Location: ../login.php');
@@ -75,7 +76,7 @@ function requireAdminHard(): void {
     }
 }
 
-/** ===== Protección admin ===== */
+/** ===== ProtecciÃ³n admin ===== */
 requireAdminHard();
 
 /** ===== Tabla/columnas productos ===== */
@@ -94,11 +95,12 @@ $COL_IMAGE     = pickCol($conexion, $TABLE_PRODUCTS, ['imagen_url', 'image_url',
 $COL_ACTIVE    = pickCol($conexion, $TABLE_PRODUCTS, ['activo', 'is_active', 'estado'], 'activo');
 $COL_FEATURED  = pickCol($conexion, $TABLE_PRODUCTS, ['destacado', 'featured', 'is_featured'], null);
 $COL_CAT_ID    = pickCol($conexion, $TABLE_PRODUCTS, ['categoria_id', 'category_id'], null);
+$COL_SELLER_ID = pickCol($conexion, $TABLE_PRODUCTS, ['vendedor_id', 'seller_id'], null);
 
 $activeType = getColumnType($conexion, $TABLE_PRODUCTS, $COL_ACTIVE);
 $activeIsNumeric = isNumericColumnType($activeType);
 
-/** ===== Categorías (opcional) ===== */
+/** ===== CategorÃ­as (opcional) ===== */
 $TABLE_CATS = tableExists($conexion, 'categorias') ? 'categorias' : (tableExists($conexion, 'categories') ? 'categories' : null);
 $cats = [];
 if ($TABLE_CATS && $COL_CAT_ID) {
@@ -158,20 +160,20 @@ function saveProductImage(array $file, string $targetDirRel = 'uploads/productos
         return ['ok' => false, 'path' => '', 'error' => 'Error al subir archivo.'];
     }
     if (($file['size'] ?? 0) > $maxBytes) {
-        return ['ok' => false, 'path' => '', 'error' => 'Imagen demasiado grande. Máx 5MB.'];
+        return ['ok' => false, 'path' => '', 'error' => 'Imagen demasiado grande. MÃ¡x 5MB.'];
     }
 
     $allowedExt = ['jpg','jpeg','png','webp'];
     $ext = strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allowedExt, true)) {
-        return ['ok' => false, 'path' => '', 'error' => 'Extensión no permitida. Solo JPG/PNG/WEBP.'];
+        return ['ok' => false, 'path' => '', 'error' => 'ExtensiÃ³n no permitida. Solo JPG/PNG/WEBP.'];
     }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime  = $finfo->file($file['tmp_name']);
     $allowedMime = ['image/jpeg','image/png','image/webp'];
     if (!in_array($mime, $allowedMime, true)) {
-        return ['ok' => false, 'path' => '', 'error' => 'MIME inválido (no es imagen real).'];
+        return ['ok' => false, 'path' => '', 'error' => 'MIME invÃ¡lido (no es imagen real).'];
     }
 
     $absDir = __DIR__ . '/../' . $targetDirRel;
@@ -193,7 +195,7 @@ function saveProductImage(array $file, string $targetDirRel = 'uploads/productos
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postedCsrf = $_POST['csrf'] ?? '';
     if (!hash_equals($csrf, $postedCsrf)) {
-        $_SESSION['error'] = 'CSRF inválido. Recarga e intenta de nuevo.';
+        $_SESSION['error'] = 'CSRF invÃ¡lido. Recarga e intenta de nuevo.';
         header("Location: productos-admin.php");
         exit;
     }
@@ -204,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pid = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
 
         if ($action === 'toggle_active') {
-            if ($pid <= 0) throw new Exception('Producto inválido.');
+            if ($pid <= 0) throw new Exception('Producto invÃ¡lido.');
 
             $sql = "SELECT `$COL_ACTIVE` AS a FROM `$TABLE_PRODUCTS` WHERE `$COL_ID`=? LIMIT 1";
             $st  = $conexion->prepare($sql);
@@ -235,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'toggle_featured') {
-            if ($pid <= 0) throw new Exception('Producto inválido.');
+            if ($pid <= 0) throw new Exception('Producto invÃ¡lido.');
             if (!$COL_FEATURED) throw new Exception('Tu tabla no tiene columna destacado/featured.');
 
             $sql = "SELECT `$COL_FEATURED` AS d FROM `$TABLE_PRODUCTS` WHERE `$COL_ID`=? LIMIT 1";
@@ -258,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'update_stock') {
-            if ($pid <= 0) throw new Exception('Producto inválido.');
+            if ($pid <= 0) throw new Exception('Producto invÃ¡lido.');
             if (!$COL_STOCK) throw new Exception('Tu tabla no tiene columna stock.');
 
             $stock = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
@@ -322,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'update_product') {
-            if ($pid <= 0) throw new Exception('Producto inválido.');
+            if ($pid <= 0) throw new Exception('Producto invÃ¡lido.');
 
             $nombre = trim((string)($_POST['nombre'] ?? ''));
             if ($nombre === '') throw new Exception('El nombre es obligatorio.');
@@ -380,9 +382,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'delete_product') {
-            if ($pid <= 0) throw new Exception('Producto inválido.');
+            if ($pid <= 0) throw new Exception('Producto invÃ¡lido.');
 
-            // Preferimos "desactivar" (borrado lógico)
+            // Preferimos "desactivar" (borrado lÃ³gico)
             if ($COL_ACTIVE) {
                 $offVal = $activeIsNumeric ? 0 : 'INACTIVO';
                 $sqlU = "UPDATE `$TABLE_PRODUCTS` SET `$COL_ACTIVE`=? WHERE `$COL_ID`=?";
@@ -395,7 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stU->bind_param("si", $offStr, $pid);
                 }
                 $stU->execute();
-                $_SESSION['success'] = 'Producto desactivado (borrado lógico).';
+                $_SESSION['success'] = 'Producto desactivado (borrado lÃ³gico).';
             } else {
                 $sqlD = "DELETE FROM `$TABLE_PRODUCTS` WHERE `$COL_ID`=?";
                 $stD  = $conexion->prepare($sqlD);
@@ -408,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $_SESSION['error'] = 'Acción no válida.';
+        $_SESSION['error'] = 'AcciÃ³n no vÃ¡lida.';
         header("Location: productos-admin.php");
         exit;
 
@@ -419,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/** ===== Listado + búsqueda + paginación ===== */
+/** ===== Listado + bÃºsqueda + paginaciÃ³n ===== */
 $q     = trim((string)($_GET['q'] ?? ''));
 $page  = max(1, (int)($_GET['page'] ?? 1));
 $limit = 25;
@@ -430,14 +432,23 @@ $params = [];
 $types  = "";
 
 if ($q !== '') {
-    $where .= " AND (`$COL_NAME` LIKE ? OR `$COL_ID` = ?)";
+    $where .= " AND (p.`$COL_NAME` LIKE ? OR p.`$COL_ID` = ?";
+    if ($COL_SELLER_ID && tableExists($conexion, 'usuarios') && colExists($conexion, 'usuarios', 'nombre')) {
+        $where .= " OR sv.nombre LIKE ?";
+    }
+    $where .= ")";
     $like = "%$q%";
     $params[] = $like;
     $params[] = (int)$q;
     $types = "si";
+    if ($COL_SELLER_ID && tableExists($conexion, 'usuarios') && colExists($conexion, 'usuarios', 'nombre')) {
+        $params[] = $like;
+        $types .= "s";
+    }
 }
 
-$sqlCount = "SELECT COUNT(*) c FROM `$TABLE_PRODUCTS` WHERE $where";
+$sellerJoin = ($COL_SELLER_ID && tableExists($conexion, 'usuarios')) ? " LEFT JOIN usuarios sv ON sv.id = p.`$COL_SELLER_ID`" : "";
+$sqlCount = "SELECT COUNT(*) c FROM `$TABLE_PRODUCTS` p $sellerJoin WHERE $where";
 $stC = $conexion->prepare($sqlCount);
 if ($types) $stC->bind_param($types, ...$params);
 $stC->execute();
@@ -455,8 +466,17 @@ if ($COL_FEATURED) $selectCols[] = "`$COL_FEATURED` AS destacado";
 if ($COL_IMAGE)    $selectCols[] = "`$COL_IMAGE` AS imagen";
 if ($COL_DESC)     $selectCols[] = "`$COL_DESC` AS descripcion";
 if ($COL_CAT_ID)   $selectCols[] = "`$COL_CAT_ID` AS categoria_id";
+if ($COL_SELLER_ID) $selectCols[] = "p.`$COL_SELLER_ID` AS vendedor_id";
+if ($COL_SELLER_ID && tableExists($conexion, 'usuarios')) {
+    $selectCols[] = "sv.nombre AS vendedor_nombre";
+    $selectCols[] = "sv.email AS vendedor_email";
+}
 
-$sql = "SELECT " . implode(", ", $selectCols) . " FROM `$TABLE_PRODUCTS` WHERE $where ORDER BY `$COL_ID` DESC LIMIT $limit OFFSET $off";
+$selectColsSql = array_map(function($col) {
+    return str_starts_with($col, "`") ? "p.$col" : $col;
+}, $selectCols);
+
+$sql = "SELECT " . implode(", ", $selectColsSql) . " FROM `$TABLE_PRODUCTS` p $sellerJoin WHERE $where ORDER BY p.`$COL_ID` DESC LIMIT $limit OFFSET $off";
 $st = $conexion->prepare($sql);
 if ($types) $st->bind_param($types, ...$params);
 $st->execute();
@@ -466,7 +486,7 @@ $rs = $st->get_result();
 $editId = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
 $edit = null;
 if ($editId > 0) {
-    $sqlE = "SELECT " . implode(", ", $selectCols) . " FROM `$TABLE_PRODUCTS` WHERE `$COL_ID`=? LIMIT 1";
+    $sqlE = "SELECT " . implode(", ", $selectColsSql) . " FROM `$TABLE_PRODUCTS` p $sellerJoin WHERE p.`$COL_ID`=? LIMIT 1";
     $stE  = $conexion->prepare($sqlE);
     $stE->bind_param("i", $editId);
     $stE->execute();
@@ -489,6 +509,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo h($page_title); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
@@ -649,71 +670,17 @@ function navActive(string $file, string $currentPage): string { return $currentP
 </head>
 <body>
 
-<button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-
-<aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-logo">
-        <div class="logo">Monkeystraming</div>
-        <div class="subtitle">Panel de Administración</div>
-    </div>
-
-    <nav class="admin-menu">
-        <div class="menu-section">
-            <h3>Principal</h3>
-            <a href="index.php" class="menu-item <?php echo navActive('index.php', $currentPage); ?>">
-                <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
-            </a>
-            <a href="ventas.php" class="menu-item <?php echo navActive('ventas.php', $currentPage); ?>">
-                <i class="fas fa-shopping-cart"></i><span>Ventas</span>
-            </a>
-            <a href="recargas-admin.php" class="menu-item <?php echo navActive('recargas-admin.php', $currentPage); ?>">
-                <i class="fas fa-coins"></i><span>Recargas</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['recargas_pendientes']; ?></span>
-            </a>
-        </div>
-
-        <div class="menu-section">
-            <h3>Gestión</h3>
-            <a href="usuarios.php" class="menu-item <?php echo navActive('usuarios.php', $currentPage); ?>">
-                <i class="fas fa-users"></i><span>Usuarios</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['usuarios_nuevos_hoy']; ?></span>
-            </a>
-                        <a href="vendedores.php" class="menu-item <?php echo navActive('vendedores.php', $currentPage); ?>">
-                <i class="fas fa-user-tie"></i><span>Vendedores</span>
-            </a>
-            <a href="productos-admin.php" class="menu-item <?php echo navActive('productos-admin.php', $currentPage); ?>">
-                <i class="fas fa-box-open"></i><span>Productos</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['productos_agotados']; ?></span>
-            </a>
-            <a href="stock.php" class="menu-item <?php echo navActive('stock.php', $currentPage); ?>">
-                <i class="fas fa-warehouse"></i><span>Stock</span>
-            </a>
-        </div>
-
-        <div class="menu-section">
-            <h3>Soporte</h3>
-            <a href="tickets.php" class="menu-item <?php echo navActive('tickets.php', $currentPage); ?>">
-                <i class="fas fa-ticket-alt"></i><span>Tickets</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['tickets_soporte']; ?></span>
-            </a>
-        </div>
-    </nav>
-
-    <div class="menu-section" style="margin-top:auto;padding-bottom:25px;">
-        <a href="../index.php" class="menu-item"><i class="fas fa-globe"></i><span>Ver Sitio Web</span></a>
-        <a href="../logout.php" class="menu-item"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
-    </div>
-</aside>
+<?php renderAdminSidebar($conexion, $currentPage ?? basename($_SERVER['PHP_SELF'])); ?>
 
 <main class="admin-main">
     <header class="admin-header">
         <div class="header-title">
             <h1>Productos</h1>
-            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " — " . h($adminEmail) : ""; ?></p>
+            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " â€” " . h($adminEmail) : ""; ?></p>
         </div>
 
         <div class="header-actions">
-            <input type="text" class="search-bar" placeholder="🔍 Buscar en el sistema..." disabled>
+            <input type="text" class="search-bar" placeholder="ðŸ” Buscar en el sistema..." disabled>
             <div class="user-menu">
                 <div class="user-avatar"><i class="fas fa-user-cog"></i></div>
                 <div class="user-info">
@@ -756,6 +723,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                             <tr>
                                 <th style="width:70px;">ID</th>
                                 <th>Producto</th>
+                                <th style="width:190px;">Vendedor</th>
                                 <th style="width:130px;">Stock</th>
                                 <th style="width:140px;">Precio</th>
                                 <th style="width:140px;">Estado</th>
@@ -798,6 +766,16 @@ function navActive(string $file, string $currentPage): string { return $currentP
                                     </td>
 
                                     <td>
+                                        <?php if (!empty($p['vendedor_id'])): ?>
+                                            <strong><?php echo h($p['vendedor_nombre'] ?? ('Vendedor #' . (int)$p['vendedor_id'])); ?></strong>
+                                            <div class="muted" style="font-size:0.82rem;"><?php echo h($p['vendedor_email'] ?? ''); ?></div>
+                                            <a class="muted" style="font-size:0.82rem;color:#12aaff;text-decoration:none;" href="vendedores.php?seller_id=<?php echo (int)$p['vendedor_id']; ?>">Ver vendedor</a>
+                                        <?php else: ?>
+                                            <span class="muted">Admin / sin vendedor</span>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td>
                                         <form method="POST" action="" style="display:flex;gap:8px;align-items:center;">
                                             <input type="hidden" name="csrf" value="<?php echo h($csrf); ?>">
                                             <input type="hidden" name="action" value="update_stock">
@@ -821,7 +799,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                                                 <i class="fas fa-edit"></i>
                                             </a>
 
-                                            <form method="POST" action="" onsubmit="return confirm('¿Seguro que deseas <?php echo $activo?'desactivar':'activar'; ?> este producto?');">
+                                            <form method="POST" action="" onsubmit="return confirm('Â¿Seguro que deseas <?php echo $activo?'desactivar':'activar'; ?> este producto?');">
                                                 <input type="hidden" name="csrf" value="<?php echo h($csrf); ?>">
                                                 <input type="hidden" name="action" value="toggle_active">
                                                 <input type="hidden" name="product_id" value="<?php echo (int)$p['id']; ?>">
@@ -841,11 +819,11 @@ function navActive(string $file, string $currentPage): string { return $currentP
                                             </form>
                                             <?php endif; ?>
 
-                                            <form method="POST" action="" onsubmit="return confirm('Esto desactivará el producto. ¿Continuar?');">
+                                            <form method="POST" action="" onsubmit="return confirm('Esto desactivarÃ¡ el producto. Â¿Continuar?');">
                                                 <input type="hidden" name="csrf" value="<?php echo h($csrf); ?>">
                                                 <input type="hidden" name="action" value="delete_product">
                                                 <input type="hidden" name="product_id" value="<?php echo (int)$p['id']; ?>">
-                                                <button class="iconbtn danger" type="submit" title="Eliminar (lógico)">
+                                                <button class="iconbtn danger" type="submit" title="Eliminar (lÃ³gico)">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -854,7 +832,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="6" class="muted" style="padding:18px;">No se encontraron productos.</td></tr>
+                            <tr><td colspan="7" class="muted" style="padding:18px;">No se encontraron productos.</td></tr>
                         <?php endif; ?>
                         </tbody>
                     </table>
@@ -867,7 +845,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                     $next = min($totalPages, $page + 1);
                     ?>
                     <a href="<?php echo $base . $prev; ?>"><i class="fas fa-chevron-left"></i></a>
-                    <span class="current">Página <?php echo (int)$page; ?> / <?php echo (int)$totalPages; ?></span>
+                    <span class="current">PÃ¡gina <?php echo (int)$page; ?> / <?php echo (int)$totalPages; ?></span>
                     <a href="<?php echo $base . $next; ?>"><i class="fas fa-chevron-right"></i></a>
                 </div>
             </div>
@@ -896,7 +874,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         <input type="text" name="nombre" value="<?php echo h($edit['nombre'] ?? ''); ?>" required>
 
                         <?php if ($COL_DESC): ?>
-                            <label>Descripción</label>
+                            <label>DescripciÃ³n</label>
                             <textarea name="descripcion"><?php echo h($edit['descripcion'] ?? ''); ?></textarea>
                         <?php endif; ?>
 
@@ -913,9 +891,9 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         </div>
 
                         <?php if ($COL_CAT_ID && $TABLE_CATS): ?>
-                            <label>Categoría</label>
+                            <label>CategorÃ­a</label>
                             <select name="categoria_id">
-                                <option value="">—</option>
+                                <option value="">â€”</option>
                                 <?php foreach($cats as $c): ?>
                                     <option value="<?php echo (int)$c['id']; ?>"
                                         <?php echo ((int)($edit['categoria_id'] ?? 0) === (int)$c['id']) ? 'selected' : ''; ?>>
@@ -928,7 +906,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         <?php if ($COL_IMAGE): ?>
                             <label>Imagen (opcional)</label>
                             <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
-                            <p class="muted" style="margin-top:6px;">Se guarda en <strong>uploads/productos/</strong> (JPG/PNG/WEBP, máx 5MB).</p>
+                            <p class="muted" style="margin-top:6px;">Se guarda en <strong>uploads/productos/</strong> (JPG/PNG/WEBP, mÃ¡x 5MB).</p>
                         <?php endif; ?>
 
                         <div class="checks">
@@ -955,7 +933,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         <input type="text" name="nombre" placeholder="Ej: Netflix 4K Premium" required>
 
                         <?php if ($COL_DESC): ?>
-                            <label>Descripción</label>
+                            <label>DescripciÃ³n</label>
                             <textarea name="descripcion" placeholder="Detalles del producto..."></textarea>
                         <?php endif; ?>
 
@@ -971,9 +949,9 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         </div>
 
                         <?php if ($COL_CAT_ID && $TABLE_CATS): ?>
-                            <label>Categoría</label>
+                            <label>CategorÃ­a</label>
                             <select name="categoria_id">
-                                <option value="">—</option>
+                                <option value="">â€”</option>
                                 <?php foreach($cats as $c): ?>
                                     <option value="<?php echo (int)$c['id']; ?>"><?php echo h($c['nombre']); ?></option>
                                 <?php endforeach; ?>
@@ -983,7 +961,7 @@ function navActive(string $file, string $currentPage): string { return $currentP
                         <?php if ($COL_IMAGE): ?>
                             <label>Imagen (opcional)</label>
                             <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
-                            <p class="muted" style="margin-top:6px;">Se guarda en <strong>uploads/productos/</strong> (JPG/PNG/WEBP, máx 5MB).</p>
+                            <p class="muted" style="margin-top:6px;">Se guarda en <strong>uploads/productos/</strong> (JPG/PNG/WEBP, mÃ¡x 5MB).</p>
                         <?php endif; ?>
 
                         <div class="checks">
@@ -1024,3 +1002,5 @@ document.addEventListener('click', (e) => {
 
 </body>
 </html>
+
+

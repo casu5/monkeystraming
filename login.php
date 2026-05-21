@@ -576,6 +576,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gap: 5px;
         }
     </style>
+    <link rel="stylesheet" href="assets/css/auth-responsive.css">
 </head>
 <body>
 
@@ -585,14 +586,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Volver al inicio
         </a>
     </div>
-<div class="logo">
-        <!-- REEMPLAZA LA URL CON LA RUTA DE TU IMAGEN DE LOGO -->
-        <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
-    </div>
     <div class="auth-container">
         <div class="auth-logo">
-            
-            
+            <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
         </div>
 
         <?php if (!empty($producto_redirect)): ?>

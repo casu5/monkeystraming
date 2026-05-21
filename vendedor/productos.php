@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/includes/panel-shell.php';
 
 requireRole('vendedor');
 
@@ -186,6 +187,7 @@ $page_title = "Mis productos - Vendedor";
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
@@ -206,17 +208,7 @@ $page_title = "Mis productos - Vendedor";
   </style>
 </head>
 <body>
-<main class="wrap">
-  <section class="top">
-    <div>
-      <h1>Mis productos</h1>
-      <p class="muted">Crea las cartillas que los clientes encontraran en el marketplace.</p>
-    </div>
-    <div>
-      <a class="btn secondary" href="dashboard.php"><i class="fas fa-arrow-left"></i> Panel</a>
-      <a class="btn secondary" href="stock.php"><i class="fas fa-key"></i> Stock</a>
-    </div>
-  </section>
+<?php sellerPanelStart('Mis productos', 'Crea las cartillas que los clientes encontraran en el marketplace.', $seller, 'productos'); ?>
 
   <?php if (!$migrationReady): ?>
     <div class="alert err">Falta aplicar la migracion marketplace para habilitar productos por vendedor.</div>
@@ -303,6 +295,6 @@ $page_title = "Mis productos - Vendedor";
       </table>
     </div>
   </section>
-</main>
+<?php sellerPanelEnd(); ?>
 </body>
 </html>

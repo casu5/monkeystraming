@@ -10,6 +10,19 @@ if (!function_exists('redirect')) {
     }
 }
 
+function tableExistsUserDashboard(mysqli $cx, string $table): bool {
+    $t = $cx->real_escape_string($table);
+    $rs = $cx->query("SHOW TABLES LIKE '$t'");
+    return ($rs && $rs->num_rows > 0);
+}
+
+function colExistsUserDashboard(mysqli $cx, string $table, string $col): bool {
+    $t = $cx->real_escape_string($table);
+    $c = $cx->real_escape_string($col);
+    $rs = $cx->query("SHOW COLUMNS FROM `$t` LIKE '$c'");
+    return ($rs && $rs->num_rows > 0);
+}
+
 // Requiere login
 requireLogin('../login.php'); // o 'login.php' según tu estructura
 
@@ -95,9 +108,35 @@ $productos_proximos = (int)($vencimientos['proximos_a_vencer'] ?? 0);
 $productos_vigentes = (int)($vencimientos['vigentes'] ?? 0);
 
 // Obtener últimas compras con fecha de vencimiento
-$sql_compras = "SELECT p.nombre, c.monto, c.fecha_compra, c.estado, c.fecha_vencimiento 
+$hasCuentasDash = tableExistsUserDashboard($conexion, 'cuentas');
+$hasPerfilesDash = tableExistsUserDashboard($conexion, 'cuenta_perfiles');
+$hasCredentialColumns = colExistsUserDashboard($conexion, 'compras', 'cuenta_id')
+    && colExistsUserDashboard($conexion, 'compras', 'perfil_id')
+    && $hasCuentasDash
+    && $hasPerfilesDash;
+$hasCompraItemCredential = $hasCuentasDash
+    && $hasPerfilesDash
+    && colExistsUserDashboard($conexion, 'cuenta_perfiles', 'compra_item_id');
+
+$credentialSelect = ", NULL AS cred_login";
+$credentialJoin = "";
+if ($hasCredentialColumns) {
+    $credentialSelect = ", cu.login_user AS cred_login";
+    $credentialJoin = "
+                LEFT JOIN cuentas cu ON cu.id = c.cuenta_id
+                LEFT JOIN cuenta_perfiles cp ON cp.id = c.perfil_id";
+} elseif ($hasCompraItemCredential) {
+    $credentialSelect = ", cu.login_user AS cred_login";
+    $credentialJoin = "
+                LEFT JOIN cuenta_perfiles cp ON cp.compra_item_id = c.id
+                LEFT JOIN cuentas cu ON cu.id = cp.cuenta_id";
+}
+
+$sql_compras = "SELECT c.id, p.nombre, c.monto, c.fecha_compra, c.estado, c.fecha_vencimiento 
+                       $credentialSelect
                 FROM compras c 
                 JOIN productos p ON c.producto_id = p.id 
+                $credentialJoin
                 WHERE c.usuario_id = ? 
                 ORDER BY c.fecha_compra DESC 
                 LIMIT 5";
@@ -218,6 +257,7 @@ include '../includes/header.php';
                             <th>Producto</th>
                             <th>Fecha compra</th>
                             <th>Vence el</th>
+                            <th>Credenciales</th>
                             <th>Monto</th>
                             <th>Estado</th>
                         </tr>
@@ -246,6 +286,13 @@ include '../includes/header.php';
                             <td><?php echo htmlspecialchars($compra['nombre']); ?></td>
                             <td><?php echo date('d/m/Y', strtotime($compra['fecha_compra'])); ?></td>
                             <td class="<?php echo $vencimiento_class; ?>"><?php echo $vencimiento_txt; ?></td>
+                            <td>
+                                <?php if (!empty($compra['cred_login'])): ?>
+                                    <a class="mini-link" href="historial.php"><i class="fas fa-key"></i> Ver</a>
+                                <?php else: ?>
+                                    <span class="muted">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td>S/ <?php echo number_format($compra['monto'], 2); ?></td>
                             <td>
                                 <span class="status-badge status-<?php echo htmlspecialchars($compra['estado']); ?>">
@@ -396,6 +443,9 @@ include '../includes/header.php';
 .status-completada, .status-aprobada { background: rgba(52, 199, 89, 0.2); color: #34c759; }
 .status-pendiente { background: rgba(255, 204, 0, 0.2); color: #ffcc00; }
 .status-cancelada, .status-rechazada { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
+.mini-link { color: #12aaff; text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
+.mini-link:hover { color: #0de0c9; }
+.muted { color: #aaa; }
 
 /* ✅ NUEVO: Colores para vencimientos */
 .vencido { color: #ff3b30; font-weight: bold; }

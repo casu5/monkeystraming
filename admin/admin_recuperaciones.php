@@ -1,6 +1,7 @@
 <?php
 // Ajustar ruta según la ubicación de tu admin_recuperaciones.php
 require_once '../config/database.php'; // Agregar ../ para subir un nivel
+require_once __DIR__ . '/includes/sidebar.php';
 
 // Iniciar sesión solo si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -117,9 +118,10 @@ $result = $conexion->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #0d0f14; color: #e5e5e5; padding: 20px; }
+        body { background: #0d0f14; color: #e5e5e5; padding: 30px 30px 30px 302px; }
         .container { max-width: 1200px; margin: 0 auto; }
         header { 
             background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px;
@@ -180,6 +182,7 @@ $result = $conexion->query($sql);
             border-left: 3px solid #25D366;
         }
         @media (max-width: 768px) {
+            body { padding: 82px 16px 24px; }
             .stats { grid-template-columns: 1fr; }
             table { display: block; overflow-x: auto; }
             th, td { padding: 10px; }
@@ -187,6 +190,7 @@ $result = $conexion->query($sql);
     </style>
 </head>
 <body>
+    <?php renderAdminSidebar($conexion, 'admin_recuperaciones.php'); ?>
     <div class="container">
         <header>
             

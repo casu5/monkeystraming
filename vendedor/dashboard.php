@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/includes/panel-shell.php';
 
 requireRole('vendedor');
 
@@ -68,6 +69,7 @@ $page_title = "Panel vendedor - Monkeystraming";
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
@@ -89,17 +91,7 @@ $page_title = "Panel vendedor - Monkeystraming";
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <section class="top">
-      <div>
-        <h1>Hola, <?php echo h($vendedor['nombre'] ?? 'vendedor'); ?></h1>
-        <p class="muted">Este sera tu centro de control para vender tus propias cartillas.</p>
-      </div>
-      <div>
-        <a class="btn" href="../index.php"><i class="fas fa-store"></i> Ver tienda</a>
-        <a class="btn" href="../logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
-      </div>
-    </section>
+  <?php sellerPanelStart('Panel vendedor', 'Hola, ' . ($vendedor['nombre'] ?? 'vendedor') . '. Gestiona tus productos, stock y ventas.', $vendedor, 'dashboard'); ?>
 
     <section class="grid">
       <div class="card stat"><div class="icon"><i class="fas fa-box"></i></div><div><div class="num"><?php echo (int)$stats['productos']; ?></div><div class="muted">Productos</div></div></div>
@@ -125,6 +117,6 @@ $page_title = "Panel vendedor - Monkeystraming";
         <a class="btn primary" href="ventas.php"><i class="fas fa-chart-line"></i> Ver ventas</a>
       </div>
     </section>
-  </main>
+  <?php sellerPanelEnd(); ?>
 </body>
 </html>

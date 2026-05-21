@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/includes/panel-shell.php';
 
 requireRole('vendedor');
 
@@ -150,6 +151,7 @@ $page_title = "Mi stock - Vendedor";
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
@@ -167,17 +169,7 @@ $page_title = "Mi stock - Vendedor";
   </style>
 </head>
 <body>
-<main class="wrap">
-  <section class="top">
-    <div>
-      <h1>Mi stock</h1>
-      <p class="muted">Carga cuentas y perfiles que se entregaran automaticamente al comprar.</p>
-    </div>
-    <div>
-      <a class="btn secondary" href="dashboard.php"><i class="fas fa-arrow-left"></i> Panel</a>
-      <a class="btn secondary" href="productos.php"><i class="fas fa-box"></i> Productos</a>
-    </div>
-  </section>
+<?php sellerPanelStart('Mi stock', 'Carga cuentas y perfiles que se entregaran automaticamente al comprar.', $seller, 'stock'); ?>
 
   <?php if (!$migrationReady): ?><div class="alert err">Falta aplicar la migracion marketplace para habilitar stock por vendedor.</div><?php endif; ?>
   <?php if ($success): ?><div class="alert ok"><?php echo h($success); ?></div><?php endif; ?>
@@ -230,6 +222,6 @@ $page_title = "Mi stock - Vendedor";
       </table>
     </div>
   </section>
-</main>
+<?php sellerPanelEnd(); ?>
 </body>
 </html>

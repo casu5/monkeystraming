@@ -1,6 +1,7 @@
 <?php
-// admin/stock.php — Gestión de Stock (cuentas/perfiles) con layout del panel
+// admin/stock.php â€” GestiÃ³n de Stock (cuentas/perfiles) con layout del panel
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -32,7 +33,7 @@ function navActive(string $file, string $currentPage): string {
     return $currentPage === $file ? 'active' : '';
 }
 
-/** ===== Protección admin (hard) ===== */
+/** ===== ProtecciÃ³n admin (hard) ===== */
 function requireAdminHard(): void {
     if (function_exists('requireAdmin')) {
         requireAdmin();
@@ -40,7 +41,7 @@ function requireAdminHard(): void {
     }
     if (!function_exists('isLoggedIn') || !function_exists('getCurrentUser')) {
         http_response_code(500);
-        die('Faltan helpers de sesión (isLoggedIn/getCurrentUser).');
+        die('Faltan helpers de sesiÃ³n (isLoggedIn/getCurrentUser).');
     }
     if (!isLoggedIn()) {
         header('Location: ../login.php');
@@ -74,7 +75,7 @@ if (empty($_SESSION['admin_id']) && function_exists('getCurrentUser')) {
 $adminName  = $admin['nombre'] ?? 'Administrador';
 $adminEmail = $admin['email'] ?? '';
 
-/** ===== Estadísticas para badges del menú ===== */
+/** ===== EstadÃ­sticas para badges del menÃº ===== */
 $estadisticas = [
     'usuarios_nuevos_hoy' => 0,
     'productos_agotados'  => 0,
@@ -103,11 +104,12 @@ if (tableExists($conexion, 'tickets') && colExists($conexion, 'tickets', 'estado
     if ($rs) $estadisticas['tickets_soporte'] = (int)($rs->fetch_assoc()['c'] ?? 0);
 }
 
-/** ===== Lógica Stock ===== */
+/** ===== LÃ³gica Stock ===== */
 $success = '';
 $error   = '';
 
 $cuentasTieneModoVenta = tableExists($conexion, 'cuentas') && colExists($conexion, 'cuentas', 'modo_venta');
+$cuentasTieneVendedor = tableExists($conexion, 'cuentas') && colExists($conexion, 'cuentas', 'vendedor_id');
 
 function obtenerTipoVentaProducto(mysqli $cx, int $productoId): ?string {
     $stmt = $cx->prepare("SELECT tipo_venta FROM productos WHERE id=? LIMIT 1");
@@ -119,7 +121,7 @@ function obtenerTipoVentaProducto(mysqli $cx, int $productoId): ?string {
 }
 
 function recalcularStockProducto(mysqli $cx, int $productoId, string $modoVenta): void {
-    // Actualiza productos.stock según stock real
+    // Actualiza productos.stock segÃºn stock real
     if (!tableExists($cx, 'productos') || !colExists($cx, 'productos', 'stock')) return;
 
     $stock = 0;
@@ -174,17 +176,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
     $modoVentaPost = ($modoVentaPost === 'CUENTA_COMPLETA') ? 'CUENTA_COMPLETA' : 'PERFIL';
 
     if ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
-        $error = "Completa producto, usuario/correo y contraseña.";
+        $error = "Completa producto, usuario/correo y contraseÃ±a.";
     } else {
 
         // Tipo_venta oficial del producto (si existe)
         $tipoVentaProducto = obtenerTipoVentaProducto($conexion, $productoId);
         if (!$tipoVentaProducto) {
-            $error = "Producto inválido o no encontrado.";
+            $error = "Producto invÃ¡lido o no encontrado.";
         } else {
             // Para evitar inconsistencias: por defecto lo alineamos al producto
-            // Si quieres que el admin pueda forzar distinto, cambia esta línea a: $modoVenta = $modoVentaPost;
+            // Si quieres que el admin pueda forzar distinto, cambia esta lÃ­nea a: $modoVenta = $modoVentaPost;
             $modoVenta = strtoupper($tipoVentaProducto) === 'CUENTA_COMPLETA' ? 'CUENTA_COMPLETA' : 'PERFIL';
+            $productoVendedorId = null;
+            if ($cuentasTieneVendedor && colExists($conexion, 'productos', 'vendedor_id')) {
+                $stSeller = $conexion->prepare("SELECT vendedor_id FROM productos WHERE id=? LIMIT 1");
+                $stSeller->bind_param("i", $productoId);
+                $stSeller->execute();
+                $sellerRow = $stSeller->get_result()->fetch_assoc();
+                $stSeller->close();
+                $productoVendedorId = !empty($sellerRow['vendedor_id']) ? (int)$sellerRow['vendedor_id'] : null;
+            }
 
             try {
                 $conexion->begin_transaction();
@@ -197,12 +208,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
                 // Insert cuenta
                 $pinDb = ($pin === '') ? null : $pin;
 
-                if ($cuentasTieneModoVenta) {
+                if ($cuentasTieneModoVenta && $cuentasTieneVendedor) {
+                    $stmt = $conexion->prepare("
+                        INSERT INTO cuentas (vendedor_id, producto_id, modo_venta, login_user, login_pass, pin, max_perfiles, estado)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'DISPONIBLE')
+                    ");
+                    $stmt->bind_param("iissssi", $productoVendedorId, $productoId, $modoVenta, $loginUser, $loginPass, $pinDb, $maxPerfiles);
+                } elseif ($cuentasTieneModoVenta) {
                     $stmt = $conexion->prepare("
                         INSERT INTO cuentas (producto_id, modo_venta, login_user, login_pass, pin, max_perfiles, estado)
                         VALUES (?, ?, ?, ?, ?, ?, 'DISPONIBLE')
                     ");
                     $stmt->bind_param("issssi", $productoId, $modoVenta, $loginUser, $loginPass, $pinDb, $maxPerfiles);
+                } elseif ($cuentasTieneVendedor) {
+                    $stmt = $conexion->prepare("
+                        INSERT INTO cuentas (vendedor_id, producto_id, login_user, login_pass, pin, max_perfiles, estado)
+                        VALUES (?, ?, ?, ?, ?, ?, 'DISPONIBLE')
+                    ");
+                    $stmt->bind_param("iisssi", $productoVendedorId, $productoId, $loginUser, $loginPass, $pinDb, $maxPerfiles);
                 } else {
                     $stmt = $conexion->prepare("
                         INSERT INTO cuentas (producto_id, login_user, login_pass, pin, max_perfiles, estado)
@@ -235,9 +258,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
                 $conexion->commit();
 
                 if ($modoVenta === 'CUENTA_COMPLETA') {
-                    $success = "Stock agregado ✅ (Cuenta completa #$cuentaId).";
+                    $success = "Stock agregado âœ… (Cuenta completa #$cuentaId).";
                 } else {
-                    $success = "Stock agregado ✅ (Cuenta #$cuentaId con $maxPerfiles perfiles).";
+                    $success = "Stock agregado âœ… (Cuenta #$cuentaId con $maxPerfiles perfiles).";
                 }
 
             } catch (Throwable $e) {
@@ -253,6 +276,12 @@ $cuentas = [];
 if (tableExists($conexion, 'cuentas') && tableExists($conexion, 'cuenta_perfiles') && tableExists($conexion, 'productos')) {
 
     $selectModo = $cuentasTieneModoVenta ? "cu.modo_venta" : "p.tipo_venta AS modo_venta";
+    $selectVendedor = colExists($conexion, 'productos', 'vendedor_id')
+        ? "p.vendedor_id, sv.nombre AS vendedor_nombre, sv.email AS vendedor_email,"
+        : "NULL AS vendedor_id, NULL AS vendedor_nombre, NULL AS vendedor_email,";
+    $joinVendedor = colExists($conexion, 'productos', 'vendedor_id')
+        ? "LEFT JOIN usuarios sv ON sv.id = p.vendedor_id"
+        : "";
 
     $sql = "
         SELECT
@@ -260,6 +289,7 @@ if (tableExists($conexion, 'cuentas') && tableExists($conexion, 'cuenta_perfiles
           cu.producto_id,
           p.nombre AS producto_nombre,
           p.tipo_venta AS producto_tipo_venta,
+          $selectVendedor
           $selectModo,
           cu.login_user,
           cu.estado,
@@ -268,6 +298,7 @@ if (tableExists($conexion, 'cuentas') && tableExists($conexion, 'cuenta_perfiles
           (SELECT COUNT(*) FROM cuenta_perfiles cp WHERE cp.cuenta_id=cu.id AND cp.estado='VENDIDO') AS vendidos
         FROM cuentas cu
         INNER JOIN productos p ON p.id = cu.producto_id
+        $joinVendedor
         ORDER BY cu.id DESC
         LIMIT 100
     ";
@@ -287,6 +318,7 @@ $page_title = "Stock - Admin - Monkeystraming";
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
@@ -417,73 +449,17 @@ $page_title = "Stock - Admin - Monkeystraming";
 </head>
 <body>
 
-<button class="sidebar-toggle" id="sidebarToggle">
-  <i class="fas fa-bars"></i>
-</button>
-
-<aside class="admin-sidebar" id="adminSidebar">
-  <div class="admin-logo">
-    <div class="logo">Monkeystraming</div>
-    <div class="subtitle">Panel de Administración</div>
-  </div>
-
-  <nav class="admin-menu">
-    <div class="menu-section">
-      <h3>Principal</h3>
-      <a href="index.php" class="menu-item <?php echo navActive('index.php', $currentPage); ?>">
-        <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
-      </a>
-      <a href="ventas.php" class="menu-item <?php echo navActive('ventas.php', $currentPage); ?>">
-        <i class="fas fa-shopping-cart"></i><span>Ventas</span>
-      </a>
-      <a href="recargas-admin.php" class="menu-item <?php echo navActive('recargas-admin.php', $currentPage); ?>">
-        <i class="fas fa-coins"></i><span>Recargas</span>
-        <span class="menu-badge"><?php echo (int)$estadisticas['recargas_pendientes']; ?></span>
-      </a>
-    </div>
-
-    <div class="menu-section">
-      <h3>Gestión</h3>
-      <a href="usuarios.php" class="menu-item <?php echo navActive('usuarios.php', $currentPage); ?>">
-        <i class="fas fa-users"></i><span>Usuarios</span>
-        <span class="menu-badge"><?php echo (int)$estadisticas['usuarios_nuevos_hoy']; ?></span>
-      </a>
-      <a href="vendedores.php" class="menu-item <?php echo navActive('vendedores.php', $currentPage); ?>">
-        <i class="fas fa-user-tie"></i><span>Vendedores</span>
-      </a>
-      <a href="productos-admin.php" class="menu-item <?php echo navActive('productos-admin.php', $currentPage); ?>">
-        <i class="fas fa-box-open"></i><span>Productos</span>
-        <span class="menu-badge"><?php echo (int)$estadisticas['productos_agotados']; ?></span>
-      </a>
-      <a href="stock.php" class="menu-item <?php echo navActive('stock.php', $currentPage); ?>">
-        <i class="fas fa-warehouse"></i><span>Stock</span>
-      </a>
-    </div>
-
-    <div class="menu-section">
-      <h3>Soporte</h3>
-      <a href="tickets.php" class="menu-item <?php echo navActive('tickets.php', $currentPage); ?>">
-        <i class="fas fa-ticket-alt"></i><span>Tickets</span>
-        <span class="menu-badge"><?php echo (int)$estadisticas['tickets_soporte']; ?></span>
-      </a>
-    </div>
-  </nav>
-
-  <div class="menu-section" style="margin-top:auto;padding-bottom:25px;">
-    <a href="../index.php" class="menu-item"><i class="fas fa-globe"></i><span>Ver Sitio Web</span></a>
-    <a href="../logout.php" class="menu-item"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
-  </div>
-</aside>
+<?php renderAdminSidebar($conexion, $currentPage ?? basename($_SERVER['PHP_SELF'])); ?>
 
 <main class="admin-main">
   <header class="admin-header">
     <div class="header-title">
       <h1>Stock</h1>
-      <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " — " . h($adminEmail) : ""; ?></p>
+      <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " â€” " . h($adminEmail) : ""; ?></p>
     </div>
 
     <div class="header-actions">
-      <input type="text" class="search-bar" placeholder="🔍 Buscar en el sistema..." disabled>
+      <input type="text" class="search-bar" placeholder="ðŸ” Buscar en el sistema..." disabled>
       <div class="user-menu">
         <div class="user-avatar"><i class="fas fa-user-cog"></i></div>
         <div class="user-info">
@@ -521,7 +497,7 @@ $page_title = "Stock - Admin - Monkeystraming";
                   data-tipo-venta="<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?>"
                 >
                   #<?php echo (int)$p['id']; ?> - <?php echo h($p['nombre']); ?>
-                  (<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?> / <?php echo (int)($p['duracion_dias'] ?? 30); ?> días)
+                  (<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?> / <?php echo (int)($p['duracion_dias'] ?? 30); ?> dÃ­as)
                 </option>
               <?php endforeach; ?>
             </select>
@@ -534,7 +510,7 @@ $page_title = "Stock - Admin - Monkeystraming";
               <option value="CUENTA_COMPLETA">CUENTA_COMPLETA (vende cuenta)</option>
             </select>
             <small class="muted">
-              Nota: está alineado al tipo_venta del producto (recomendado para que el stock se cuente bien).
+              Nota: estÃ¡ alineado al tipo_venta del producto (recomendado para que el stock se cuente bien).
             </small>
           </div>
         </div>
@@ -545,14 +521,14 @@ $page_title = "Stock - Admin - Monkeystraming";
             <input type="text" name="login_user" placeholder="correo@dominio.com" required>
           </div>
           <div>
-            <label>Contraseña</label>
+            <label>ContraseÃ±a</label>
             <input type="text" name="login_pass" placeholder="********" required>
           </div>
         </div>
 
         <div class="row" style="margin-top:12px">
           <div id="wrapMaxPerfiles">
-            <label>Máx perfiles</label>
+            <label>MÃ¡x perfiles</label>
             <input type="number" name="max_perfiles" id="maxPerfiles" value="4" min="1">
             <small class="muted">Solo aplica cuando el tipo es PERFIL.</small>
           </div>
@@ -572,7 +548,7 @@ $page_title = "Stock - Admin - Monkeystraming";
     </div>
 
     <div class="card">
-      <h3><i class="fas fa-list"></i> Últimas cuentas</h3>
+      <h3><i class="fas fa-list"></i> Ãšltimas cuentas</h3>
 
       <div style="overflow:auto;">
         <table>
@@ -580,6 +556,7 @@ $page_title = "Stock - Admin - Monkeystraming";
             <tr>
               <th style="width:90px;">ID</th>
               <th>Producto</th>
+              <th>Vendedor</th>
               <th style="width:160px;">Tipo</th>
               <th>Login</th>
               <th style="width:140px;">Estado</th>
@@ -595,6 +572,15 @@ $page_title = "Stock - Admin - Monkeystraming";
               <tr>
                 <td>#<?php echo (int)$c['id']; ?></td>
                 <td><?php echo h($c['producto_nombre']); ?></td>
+                <td>
+                  <?php if (!empty($c['vendedor_id'])): ?>
+                    <?php echo h($c['vendedor_nombre'] ?? ('Vendedor #' . (int)$c['vendedor_id'])); ?>
+                    <small class="muted"><?php echo h($c['vendedor_email'] ?? ''); ?></small>
+                    <a class="muted" style="color:#12aaff;text-decoration:none;" href="vendedores.php?seller_id=<?php echo (int)$c['vendedor_id']; ?>">Ver vendedor</a>
+                  <?php else: ?>
+                    <span class="muted">Admin / sin vendedor</span>
+                  <?php endif; ?>
+                </td>
                 <td><span class="tag"><i class="fas fa-tag"></i> <?php echo h($tipo); ?></span></td>
                 <td><?php echo h($c['login_user']); ?></td>
                 <td><?php echo h($c['estado']); ?></td>
@@ -611,7 +597,7 @@ $page_title = "Stock - Admin - Monkeystraming";
             <?php endforeach; ?>
 
             <?php if (empty($cuentas)): ?>
-              <tr><td colspan="6" class="muted" style="padding:14px;">Aún no hay stock.</td></tr>
+              <tr><td colspan="7" class="muted" style="padding:14px;">AÃºn no hay stock.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -638,7 +624,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Auto-ajuste del tipo según el producto seleccionado
+// Auto-ajuste del tipo segÃºn el producto seleccionado
 const productoSelect = document.getElementById('productoSelect');
 const modoVenta = document.getElementById('modoVenta');
 const wrapMax = document.getElementById('wrapMaxPerfiles');
@@ -676,3 +662,4 @@ refrescarUI();
 
 </body>
 </html>
+

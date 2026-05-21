@@ -1,6 +1,7 @@
 <?php
 // admin/index.php — Dashboard REAL (sin demo)
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/includes/sidebar.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -252,6 +253,7 @@ $adminEmail = $admin['email'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css">
     <style>
         /* === MONKYDOS - ADMIN DASHBOARD (REAL) === */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -414,64 +416,7 @@ $adminEmail = $admin['email'] ?? '';
 </head>
 <body>
 
-<button class="sidebar-toggle" id="sidebarToggle">
-    <i class="fas fa-bars"></i>
-</button>
-
-<aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-logo">
-        <div class="logo">Monkeystraming</div>
-        <div class="subtitle">Panel de Administración</div>
-    </div>
-
-    <nav class="admin-menu">
-        <div class="menu-section">
-            <h3>Principal</h3>
-            <a href="index.php" class="menu-item active">
-                <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
-            </a>
-            <a href="ventas.php" class="menu-item">
-                <i class="fas fa-shopping-cart"></i><span>Ventas</span>
-            </a>
-            <a href="recargas-admin.php" class="menu-item">
-                <i class="fas fa-coins"></i><span>Recargas</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['recargas_pendientes']; ?></span>
-            </a>
-            <a href="admin_recuperaciones.php" class="menu-item">
-                <i class="fas fa-coins"></i><span>Solicitudes</span>
-            </a>
-        </div>
-
-        <div class="menu-section">
-            <h3>Gestión</h3>
-            <a href="usuarios.php" class="menu-item">
-                <i class="fas fa-users"></i><span>Usuarios</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['usuarios_nuevos_hoy']; ?></span>
-            </a>
-                        <a href="vendedores.php" class="menu-item">
-                <i class="fas fa-user-tie"></i><span>Vendedores</span>
-            </a>
-            <a href="productos-admin.php" class="menu-item">
-                <i class="fas fa-box-open"></i><span>Productos</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['productos_agotados']; ?></span>
-            </a>
-            
-        </div>
-
-        <div class="menu-section">
-            <h3>Soporte</h3>
-            <a href="tickets.php" class="menu-item">
-                <i class="fas fa-ticket-alt"></i><span>Tickets</span>
-                <span class="menu-badge"><?php echo (int)$estadisticas['tickets_soporte']; ?></span>
-            </a>
-        </div>
-    </nav>
-
-    <div class="menu-section" style="margin-top:auto;padding-bottom:25px;">
-        <a href="../index.php" class="menu-item"><i class="fas fa-globe"></i><span>Ver Sitio Web</span></a>
-        <a href="../logout.php" class="menu-item"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
-    </div>
-</aside>
+<?php renderAdminSidebar($conexion, $currentPage ?? basename($_SERVER['PHP_SELF'])); ?>
 
 <main class="admin-main">
     <header class="admin-header">
@@ -731,3 +676,4 @@ document.addEventListener('click', (e) => {
 
 </body>
 </html>
+

@@ -403,6 +403,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             .producto-card button{width:100%;}
         }
     </style>
+    <link rel="stylesheet" href="assets/css/header-unificado.css">
 </head>
 <body>
 

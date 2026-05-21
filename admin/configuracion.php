@@ -1,6 +1,7 @@
 <?php
 // admin/configuracion.php — Configuración (métodos de pago)
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/includes/sidebar.php';
 
 /**
  * Protección REAL admin
@@ -312,10 +313,11 @@ $page_title = "Configuración - Admin - Monkeystraming";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo h($page_title); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-        body{background:linear-gradient(135deg,#0d0f14 0%,#11131a 35%,#0b0c11 100%);color:#e5e5e5;min-height:100vh;padding:30px}
+        body{background:linear-gradient(135deg,#0d0f14 0%,#11131a 35%,#0b0c11 100%);color:#e5e5e5;min-height:100vh;padding:30px 30px 30px 302px}
         .topbar{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
         .title h1{font-size:1.6rem;color:#fff}
         .title p{color:#aaa;margin-top:4px}
@@ -341,11 +343,13 @@ $page_title = "Configuración - Admin - Monkeystraming";
         .alert.er{border-color:rgba(255,59,48,0.35);background:rgba(255,59,48,0.10);color:#ff3b30}
         .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         @media (max-width: 700px){ .row{grid-template-columns:1fr} }
+        @media (max-width: 992px){ body{padding:82px 16px 24px} }
         .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05)}
         img.thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
     </style>
 </head>
 <body>
+<?php renderAdminSidebar($conexion, 'configuracion.php'); ?>
 
 <div class="topbar">
     <div class="title">

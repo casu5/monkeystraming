@@ -11,8 +11,9 @@ if (!isset($page_title) || trim($page_title) === '') {
     $page_title = "Monkeystraming";
 }
 
-// Detectar si estamos dentro de /user para prefijar rutas
-$prefix = (strpos($_SERVER['SCRIPT_NAME'], '/user/') !== false) ? '../' : '';
+// Detectar si estamos dentro de una carpeta para prefijar rutas
+$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$prefix = (strpos($scriptName, '/user/') !== false || strpos($scriptName, '/admin/') !== false || strpos($scriptName, '/vendedor/') !== false) ? '../' : '';
 
 // Usuario actual (para header)
 $usuario_actual = null;
@@ -213,13 +214,14 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
             }
         }
     </style>
+    <link rel="stylesheet" href="<?php echo $prefix; ?>assets/css/header-unificado.css">
 </head>
 <body>
 
 <header class="header">
     <div class="logo">
         <!-- REEMPLAZA LA URL CON LA RUTA DE TU IMAGEN DE LOGO -->
-        <img src="../assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
+        <img src="<?php echo $prefix; ?>assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
     </div>
 
     <div class="nav-container">

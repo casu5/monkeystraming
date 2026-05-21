@@ -788,6 +788,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             animation: whatsappBounce 2s infinite;
         }
     </style>
+    <link rel="stylesheet" href="assets/css/auth-responsive.css">
 </head>
 <body>
 
@@ -802,12 +803,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </a>
     </div>
 
-<img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
     <div class="auth-container" id="authContainer" data-success="<?php echo $registration_success ? '1' : '0'; ?>">
         <!-- Logo -->
         <div class="auth-logo">
-         
-          
+            <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
         </div>
 
         <!-- Indicador de progreso (4 pasos ahora) -->

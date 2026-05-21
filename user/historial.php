@@ -19,6 +19,19 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     redirect('../login.php');
 }
 
+function tableExistsUserHistory(mysqli $cx, string $table): bool {
+    $t = $cx->real_escape_string($table);
+    $rs = $cx->query("SHOW TABLES LIKE '$t'");
+    return ($rs && $rs->num_rows > 0);
+}
+
+function colExistsUserHistory(mysqli $cx, string $table, string $col): bool {
+    $t = $cx->real_escape_string($table);
+    $c = $cx->real_escape_string($col);
+    $rs = $cx->query("SHOW COLUMNS FROM `$t` LIKE '$c'");
+    return ($rs && $rs->num_rows > 0);
+}
+
 $user_id = (int)$_SESSION['user_id'];
 
 // ✅ OBTENER DATOS DEL USUARIO
@@ -38,9 +51,31 @@ $page_title = "Historial - Monkeystraming";
 include '../includes/header.php';
 
 // ✅ COMPRAS CON FECHA DE VENCIMIENTO
+$hasCuentas = tableExistsUserHistory($conexion, 'cuentas');
+$hasPerfiles = tableExistsUserHistory($conexion, 'cuenta_perfiles');
+$comprasHasCuenta = colExistsUserHistory($conexion, 'compras', 'cuenta_id');
+$comprasHasPerfil = colExistsUserHistory($conexion, 'compras', 'perfil_id');
+$perfilesHasCompraItem = $hasPerfiles && colExistsUserHistory($conexion, 'cuenta_perfiles', 'compra_item_id');
+
+$credSelect = ", NULL AS login_user, NULL AS login_pass, NULL AS pin, NULL AS perfil_nombre";
+$credJoin = "";
+if ($hasCuentas && $hasPerfiles && $comprasHasCuenta && $comprasHasPerfil) {
+    $credSelect = ", cu.login_user, cu.login_pass, cu.pin, cp.perfil_nombre";
+    $credJoin = "
+                LEFT JOIN cuentas cu ON cu.id = c.cuenta_id
+                LEFT JOIN cuenta_perfiles cp ON cp.id = c.perfil_id";
+} elseif ($hasCuentas && $hasPerfiles && $perfilesHasCompraItem) {
+    $credSelect = ", cu.login_user, cu.login_pass, cu.pin, cp.perfil_nombre";
+    $credJoin = "
+                LEFT JOIN cuenta_perfiles cp ON cp.compra_item_id = c.id
+                LEFT JOIN cuentas cu ON cu.id = cp.cuenta_id";
+}
+
 $sql_compras = "SELECT c.id, p.nombre, c.monto, c.estado, c.fecha_compra, c.fecha_vencimiento
+                       $credSelect
                 FROM compras c
                 JOIN productos p ON c.producto_id = p.id
+                $credJoin
                 WHERE c.usuario_id = ?
                 ORDER BY c.fecha_compra DESC";
 $stmt_c = $conexion->prepare($sql_compras);
@@ -75,6 +110,7 @@ $recargas = $stmt_r->get_result();
                             <th>Producto</th>
                             <th>Fecha compra</th>
                             <th>Vence el</th> <!-- ✅ NUEVA COLUMNA -->
+                            <th>Credenciales</th>
                             <th>Monto</th>
                             <th>Estado</th>
                         </tr>
@@ -104,6 +140,23 @@ $recargas = $stmt_r->get_result();
                             <td><?php echo date('d/m/Y H:i', strtotime($c['fecha_compra'])); ?></td>
                             <td class="<?php echo $vencimiento_class; ?>">
                                 <?php echo $vencimiento_txt; ?>
+                            </td>
+                            <td>
+                                <?php if (!empty($c['login_user']) || !empty($c['login_pass'])): ?>
+                                    <details class="cred-box">
+                                        <summary>Ver datos</summary>
+                                        <div><strong>Usuario:</strong> <?php echo htmlspecialchars((string)$c['login_user']); ?></div>
+                                        <div><strong>Clave:</strong> <?php echo htmlspecialchars((string)$c['login_pass']); ?></div>
+                                        <?php if (!empty($c['perfil_nombre'])): ?>
+                                            <div><strong>Perfil:</strong> <?php echo htmlspecialchars((string)$c['perfil_nombre']); ?></div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($c['pin'])): ?>
+                                            <div><strong>PIN:</strong> <?php echo htmlspecialchars((string)$c['pin']); ?></div>
+                                        <?php endif; ?>
+                                    </details>
+                                <?php else: ?>
+                                    <span class="muted">-</span>
+                                <?php endif; ?>
                             </td>
                             <td>S/ <?php echo number_format($c['monto'], 2); ?></td>
                             <td>
@@ -249,6 +302,27 @@ $recargas = $stmt_r->get_result();
     background: rgba(255, 204, 0, 0.1); 
     padding: 2px 8px;
     border-radius: 4px;
+}
+
+.cred-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #ddd;
+    max-width: 240px;
+}
+
+.cred-box summary {
+    color: #12aaff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.cred-box div {
+    margin-top: 7px;
+    word-break: break-all;
+    font-size: 0.88rem;
 }
 
 /* FILTROS (opcional, para más adelante) */

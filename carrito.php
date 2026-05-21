@@ -66,19 +66,32 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
     .empty{text-align:center;padding:54px 18px}.empty i{font-size:3rem;color:#12aaff;margin-bottom:14px}.msg{min-height:22px;margin-top:12px;font-weight:800}
     @media(max-width:850px){.grid{grid-template-columns:1fr}.item{grid-template-columns:1fr}.price{white-space:normal}}
   </style>
+  <link rel="stylesheet" href="assets/css/header-unificado.css">
 </head>
 <body>
 <header class="header">
-  <a class="brand" href="index.php">
-    <img src="assets/img/monkylogo.png" alt="Monkeystraming">
-    <span>Monkeystraming</span>
-  </a>
-  <nav class="nav">
-    <a href="index.php"><i class="fas fa-home"></i> Inicio</a>
-    <a href="productos.php"><i class="fas fa-box-open"></i> Productos</a>
-    <a href="recargar.php"><i class="fas fa-coins"></i> Recargar</a>
-    <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
-  </nav>
+  <div class="logo">
+    <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
+  </div>
+  <div class="nav-container">
+    <nav class="nav">
+      <input type="text" class="search-bar" placeholder="Buscar productos..." id="searchInput">
+      <a href="index.php"><i class="fas fa-home"></i> Inicio</a>
+      <a href="productos.php"><i class="fas fa-box-open"></i> Productos</a>
+      <a href="recargar.php"><i class="fas fa-coins"></i> Recargar</a>
+      <a href="carrito.php"><i class="fas fa-shopping-cart"></i> Carrito<?php echo cartCount() > 0 ? ' (' . cartCount() . ')' : ''; ?></a>
+      <span class="user-name-nav">
+        <i class="fas fa-user-circle"></i>
+        <?php echo h($usuario_actual['nombre'] ?? 'Usuario'); ?>
+      </span>
+      <span class="user-saldo-nav">
+        <i class="fas fa-wallet"></i>
+        S/ <?php echo number_format((float)($usuario_actual['saldo'] ?? 0), 2); ?>
+      </span>
+      <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+      <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </nav>
+  </div>
 </header>
 
 <main class="wrap">
