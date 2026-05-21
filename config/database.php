@@ -35,7 +35,7 @@ $db_config = [
 ];
 
 
-// Conexión mysqli (variable estándar del proyecto)
+
 $conexion = new mysqli(
     $db_config['host'],
     $db_config['user'],
@@ -159,9 +159,40 @@ function cleanInput($value)
 /**
  * Redirección segura.
  */
+function appBasePath(): string
+{
+    $docRoot = isset($_SERVER['DOCUMENT_ROOT'])
+        ? str_replace('\\', '/', rtrim((string)$_SERVER['DOCUMENT_ROOT'], '/\\'))
+        : '';
+    $projectRoot = str_replace('\\', '/', dirname(__DIR__));
+
+    if ($docRoot !== '' && str_starts_with($projectRoot, $docRoot)) {
+        $base = substr($projectRoot, strlen($docRoot));
+        return '/' . trim($base, '/');
+    }
+
+    return '';
+}
+
+function appUrl(string $url): string
+{
+    if (preg_match('~^https?://~i', $url)) {
+        return $url;
+    }
+
+    if ($url !== '' && $url[0] === '/') {
+        $base = appBasePath();
+        if ($base !== '' && !str_starts_with($url, $base . '/')) {
+            return $base . $url;
+        }
+    }
+
+    return $url;
+}
+
 function redirectTo(string $url): void
 {
-    header('Location: ' . $url);
+    header('Location: ' . appUrl($url));
     exit;
 }
 

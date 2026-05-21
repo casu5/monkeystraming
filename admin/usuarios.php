@@ -67,6 +67,11 @@ function toggleActiveValue($current) {
     if (in_array($s, ['activo','active','enabled','habilitado','on','1','true'], true)) return 'INACTIVO';
     return 'ACTIVO';
 }
+function adminRoleBadge(string $role): string {
+    if ($role === 'admin') return 'ADMIN';
+    if ($role === 'vendedor') return 'VENDEDOR';
+    return 'CLIENTE';
+}
 
 /** ===== Protección admin ===== */
 requireAdminHard();
@@ -174,17 +179,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'update_role') {
-            $newRole = strtoupper(trim((string)($_POST['role'] ?? '')));
-            $allowed = ['USER', 'ADMIN'];
+            $newRole = normalizeUserRole((string)($_POST['role'] ?? ''));
+            $allowed = ['cliente', 'vendedor', 'admin'];
 
             if (!in_array($newRole, $allowed, true)) {
                 throw new Exception('Rol no permitido.');
+            }
+
+            if ($userId === (int)($_SESSION['user_id'] ?? 0) && $newRole !== 'admin') {
+                throw new Exception('No puedes quitarte tu propio rol de administrador.');
             }
 
             $sqlU = "UPDATE `$TABLE_USERS` SET `$COL_ROLE` = ? WHERE `$COL_ID` = ?";
             $stU  = $conexion->prepare($sqlU);
             $stU->bind_param("si", $newRole, $userId);
             $stU->execute();
+
+            if (
+                $newRole === 'vendedor'
+                && tableExists($conexion, 'vendedor_perfiles')
+                && colExists($conexion, 'vendedor_perfiles', 'vendedor_id')
+            ) {
+                $tienda = 'Tienda #' . $userId;
+                if (colExists($conexion, 'vendedor_perfiles', 'tienda_nombre')) {
+                    $sqlProfile = "
+                        INSERT INTO vendedor_perfiles (vendedor_id, tienda_nombre)
+                        VALUES (?, ?)
+                        ON DUPLICATE KEY UPDATE tienda_nombre = tienda_nombre
+                    ";
+                    $stProfile = $conexion->prepare($sqlProfile);
+                    $stProfile->bind_param("is", $userId, $tienda);
+                } else {
+                    $sqlProfile = "
+                        INSERT IGNORE INTO vendedor_perfiles (vendedor_id)
+                        VALUES (?)
+                    ";
+                    $stProfile = $conexion->prepare($sqlProfile);
+                    $stProfile->bind_param("i", $userId);
+                }
+                $stProfile->execute();
+            }
 
             $_SESSION['success'] = 'Rol actualizado.';
             header("Location: usuarios.php");
@@ -530,8 +564,8 @@ $adminEmail = $admin['email'] ?? '';
                                 $isActive = isTruthyActive($u['estado'] ?? 0);
                                 $estadoTxt = $isActive ? 'activo' : 'inactivo';
 
-                                $role = strtoupper((string)($u['role'] ?? 'USER'));
-                                if ($role === '') $role = 'USER';
+                                $role = normalizeUserRole((string)($u['role'] ?? 'cliente'));
+                                $roleBadge = adminRoleBadge($role);
 
                                 $nombre = (string)($u['nombre'] ?? ('Usuario #' . (int)$u['id']));
                                 $initial = strtoupper(substr($nombre !== '' ? $nombre : 'U', 0, 1));
@@ -545,7 +579,7 @@ $adminEmail = $admin['email'] ?? '';
                                         </div>
                                         <div>
                                             <div style="font-weight:900;color:#fff;"><?php echo h($nombre); ?></div>
-                                            <div class="muted" style="font-size:0.85rem;"><?php echo h($role); ?></div>
+                                            <div class="muted" style="font-size:0.85rem;"><?php echo h($roleBadge); ?></div>
                                         </div>
                                     </div>
                                 </td>
@@ -558,8 +592,9 @@ $adminEmail = $admin['email'] ?? '';
                                         <input type="hidden" name="action" value="update_role">
                                         <input type="hidden" name="user_id" value="<?php echo (int)$u['id']; ?>">
                                         <select name="role">
-                                            <option value="USER"  <?php echo ($role==='USER'?'selected':''); ?>>USER</option>
-                                            <option value="ADMIN" <?php echo ($role==='ADMIN'?'selected':''); ?>>ADMIN</option>
+                                            <option value="cliente"  <?php echo ($role==='cliente'?'selected':''); ?>>Cliente</option>
+                                            <option value="vendedor" <?php echo ($role==='vendedor'?'selected':''); ?>>Vendedor</option>
+                                            <option value="admin"    <?php echo ($role==='admin'?'selected':''); ?>>Admin</option>
                                         </select>
                                         <button class="iconbtn" title="Guardar rol" type="submit">
                                             <i class="fas fa-save"></i>

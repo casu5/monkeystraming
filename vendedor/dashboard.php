@@ -122,7 +122,7 @@ $page_title = "Panel vendedor - Monkeystraming";
       <div class="card action">
         <h3>Mis ventas</h3>
         <p>Revisa compras completadas, clientes y vencimientos.</p>
-        <a class="btn primary" href="#"><i class="fas fa-chart-line"></i> Proximo modulo</a>
+        <a class="btn primary" href="ventas.php"><i class="fas fa-chart-line"></i> Ver ventas</a>
       </div>
     </section>
   </main>
