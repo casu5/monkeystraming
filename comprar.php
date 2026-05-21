@@ -31,6 +31,10 @@ function colExistsLocal(mysqli $cx, string $table, string $col): bool
 $action = $_POST['action'] ?? 'buy';
 $product_id = (int)($_POST['product_id'] ?? 0);
 
+if (!in_array($action, ['buy', 'add_to_cart'], true)) {
+    respond(['ok' => false, 'code' => 'BAD_ACTION', 'message' => 'Accion no valida.'], 400);
+}
+
 if (!function_exists('isLoggedIn') || !isLoggedIn()) {
     respond(['ok' => false, 'code' => 'NOT_LOGGED', 'message' => 'Debes iniciar sesion.', 'redirect' => 'login.php'], 401);
 }
@@ -258,10 +262,18 @@ try {
 
     $conexion->commit();
 
+    $_SESSION['user_saldo'] = $saldo - $precio;
+    if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+        unset($_SESSION['cart'][$product_id]);
+    }
+
     respond([
         'ok' => true,
         'code' => 'OK',
         'compra_id' => $compra_id,
+        'cart_count' => function_exists('cartCount') ? cartCount() : 0,
+        'saldo' => $_SESSION['user_saldo'],
+        'redirect' => 'user/dashboard.php',
         'purchase' => [
             'producto_id' => $product_id,
             'vendedor_id' => $vendedorId,

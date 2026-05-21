@@ -263,7 +263,7 @@
               </div>
             </div>
             <div style="color:#bcbcbc;">${escapeHtml(j.message || 'Compra registrada correctamente.')}</div>
-            ${j.purchase_id ? `<div style="margin-top:10px; color:#aaa;">N° compra: <b>${escapeHtml(String(j.purchase_id))}</b></div>` : ''}
+            ${(j.compra_id || j.purchase_id) ? `<div style="margin-top:10px; color:#aaa;">N° compra: <b>${escapeHtml(String(j.compra_id || j.purchase_id))}</b></div>` : ''}
             <style>
               @keyframes pop { from{ transform:scale(.75); opacity:.2 } to{ transform:scale(1); opacity:1 } }
             </style>
