@@ -1063,6 +1063,7 @@ $imagenes_predef = [
             <a href="index.php"><i class="fas fa-home"></i> Inicio</a>
             <a href="productos.php"><i class="fas fa-box-open"></i> Productos</a>
             <a href="recargar.php"><i class="fas fa-coins"></i> Recargar</a>
+            <a href="carrito.php"><i class="fas fa-shopping-cart"></i> Carrito<?php echo cartCount() > 0 ? ' (' . cartCount() . ')' : ''; ?></a>
 
             <?php if ($usuario_actual): ?>
                 <span class="user-name-nav">

@@ -293,6 +293,20 @@ function currentUser(): array
     ];
 }
 
+function cartCount(): int
+{
+    if (empty($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+        return 0;
+    }
+
+    $count = 0;
+    foreach ($_SESSION['cart'] as $item) {
+        $count += max(1, (int)($item['qty'] ?? 1));
+    }
+
+    return $count;
+}
+
 /**
  * Cierra sesión de forma limpia.
  */

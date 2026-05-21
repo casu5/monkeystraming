@@ -228,6 +228,7 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
             <a href="<?php echo $prefix; ?>index.php"><i class="fas fa-home"></i> Inicio</a>
             <a href="<?php echo $prefix; ?>productos.php"><i class="fas fa-box-open"></i> Productos</a>
             <a href="<?php echo $prefix; ?>recargar.php"><i class="fas fa-coins"></i> Recargar</a>
+            <a href="<?php echo $prefix; ?>carrito.php"><i class="fas fa-shopping-cart"></i> Carrito<?php echo cartCount() > 0 ? ' (' . cartCount() . ')' : ''; ?></a>
 
             <?php if ($usuario_actual): ?>
                 <span class="user-name-nav">
