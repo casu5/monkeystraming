@@ -19,6 +19,9 @@ if (!function_exists('cleanInput')) {
 if (!function_exists('redirect')) {
     function redirect(string $url): void
     {
+        if (function_exists('appUrl')) {
+            $url = appUrl($url);
+        }
         header('Location: ' . $url);
         exit;
     }
@@ -54,7 +57,7 @@ if (!function_exists('requireLogin')) {
             $redirectTo = $scheme . '://' . $host . $uri;
         }
 
-        redirect('login.php?redirect=' . urlencode($redirectTo));
+        redirect('/login.php?redirect=' . urlencode($redirectTo));
     }
 }
 

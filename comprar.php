@@ -58,10 +58,6 @@ try {
     $comprasHasComision = colExistsLocal($conexion, 'compras', 'comision_admin');
     $comprasHasMontoVendedor = colExistsLocal($conexion, 'compras', 'monto_vendedor');
 
-    if ($action === 'add_to_cart') {
-        respond(['ok' => true, 'message' => 'Anadido (placeholder).']);
-    }
-
     $selectVendedor = $productosHasVendedor ? 'vendedor_id' : 'NULL AS vendedor_id';
     $selectDuracion = $productosHasDuracion ? 'duracion_dias' : '30 AS duracion_dias';
     $stmtP = $conexion->prepare("SELECT id, nombre, precio, $selectVendedor, $selectDuracion FROM productos WHERE id=? AND activo=1 LIMIT 1");
@@ -80,6 +76,32 @@ try {
     $duracionDias = max(1, (int)($prod['duracion_dias'] ?? 30));
     $venceAt = date('Y-m-d H:i:s', time() + ($duracionDias * 86400));
     $fecha_compra = date('Y-m-d H:i:s');
+
+    if ($action === 'add_to_cart') {
+        if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+            $_SESSION['cart'] = [];
+        }
+
+        $_SESSION['cart'][$product_id] = [
+            'id' => $product_id,
+            'nombre' => $nombreProducto,
+            'precio' => $precio,
+            'vendedor_id' => $vendedorId,
+            'qty' => 1,
+            'added_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $cartCount = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            $cartCount += max(1, (int)($item['qty'] ?? 1));
+        }
+
+        respond([
+            'ok' => true,
+            'message' => 'Producto anadido al carrito.',
+            'cart_count' => $cartCount,
+        ]);
+    }
 
     $conexion->begin_transaction();
 

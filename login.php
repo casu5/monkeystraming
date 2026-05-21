@@ -18,6 +18,39 @@ if (isLoggedIn()) {
 
 $producto_redirect = $_GET['redirect'] ?? '';
 
+function safeLoginRedirect(string $target): string
+{
+    $target = trim($target);
+    if ($target === '') return '';
+
+    $parts = parse_url($target);
+    if ($parts === false) return '';
+
+    if (isset($parts['host'])) {
+        $currentHost = $_SERVER['HTTP_HOST'] ?? '';
+        if (strcasecmp($parts['host'], $currentHost) !== 0) {
+            return '';
+        }
+    }
+
+    $path = $parts['path'] ?? '';
+    if ($path === '' || str_contains($path, "\n") || str_contains($path, "\r")) {
+        return '';
+    }
+
+    $base = function_exists('appBasePath') ? appBasePath() : '';
+    if ($base !== '' && str_starts_with($path, $base . '/')) {
+        $path = substr($path, strlen($base));
+    }
+
+    if ($path === '/login.php' || $path === 'login.php') {
+        return '';
+    }
+
+    $query = isset($parts['query']) && $parts['query'] !== '' ? '?' . $parts['query'] : '';
+    return ltrim($path, '/') . $query;
+}
+
 $error_msg   = '';
 $success_msg = '';
 
@@ -57,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (password_verify($password, $user['password'])) {
                     $role = normalizeUserRole($user['role'] ?? 'cliente');
+                    $safeRedirect = safeLoginRedirect($producto_redirect);
 
                     // ✅ Sesión normal (USER/ADMIN)
                     $_SESSION['user_id']    = $user['id'];
@@ -72,10 +106,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['admin_name']  = $user['nombre'];
                         $_SESSION['admin_table'] = 'usuarios';
 
+                        if ($safeRedirect !== '') {
+                            redirect($safeRedirect);
+                        }
                         redirect('admin/index.php');
                     } elseif ($role === 'vendedor') {
+                        if ($safeRedirect !== '') {
+                            redirect($safeRedirect);
+                        }
                         redirect('vendedor/dashboard.php');
                     } else {
+                        if ($safeRedirect !== '') {
+                            redirect($safeRedirect);
+                        }
                         redirect('index.php');
                     }
 

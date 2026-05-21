@@ -219,6 +219,13 @@ function setUserSession(array $userRow): void
 function requireLogin(string $redirectUrl = '/login.php'): void
 {
     if (empty($_SESSION['user_id'])) {
+        if (str_contains($redirectUrl, 'login.php') && !str_contains($redirectUrl, 'redirect=')) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            $currentUrl = ($host !== '') ? ($scheme . '://' . $host . $uri) : $uri;
+            $redirectUrl .= (str_contains($redirectUrl, '?') ? '&' : '?') . 'redirect=' . urlencode($currentUrl);
+        }
         redirectTo($redirectUrl);
     }
 }
