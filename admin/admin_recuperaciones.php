@@ -1,6 +1,7 @@
 <?php
 // Ajustar ruta según la ubicación de tu admin_recuperaciones.php
 require_once '../config/database.php'; // Agregar ../ para subir un nivel
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/includes/sidebar.php';
 
 // Iniciar sesión solo si no está iniciada
@@ -12,10 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // echo "<pre>SESSION: "; print_r($_SESSION); echo "</pre>";
 
 // Verificar que esté logueado (forma simple primero)
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
+requireRole('admin');
 
 // Opcional: Verificar si es admin en BD (si tu sistema tiene rol)
 /*
@@ -38,6 +36,15 @@ if (!$usuario || ($usuario['rol'] !== 'admin' && $usuario['tipo_usuario'] !== 'a
 $page_title = "Solicitudes de Recuperación";
 $mensaje = '';
 
+if (empty($_SESSION['_csrf_admin_recovery'])) {
+    $_SESSION['_csrf_admin_recovery'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['_csrf_admin_recovery'];
+
+function recH($value): string {
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
 // Verificar si existe la tabla, si no, crearla
 $sql_check = "SHOW TABLES LIKE 'recuperaciones_pendientes'";
 $check_result = $conexion->query($sql_check);
@@ -58,7 +65,7 @@ if ($check_result->num_rows == 0) {
 }
 
 // Enviar enlace al usuario
-if (isset($_GET['enviar'])) {
+if (false && isset($_GET['enviar'])) {
     $id = intval($_GET['enviar']);
     
     // Obtener datos de la solicitud
@@ -93,7 +100,7 @@ if (isset($_GET['enviar'])) {
 }
 
 // Eliminar solicitud
-if (isset($_GET['eliminar'])) {
+if (false && isset($_GET['eliminar'])) {
     $id = intval($_GET['eliminar']);
     $sql = "DELETE FROM recuperaciones_pendientes WHERE id = ?";
     $stmt = $conexion->prepare($sql);
@@ -107,6 +114,54 @@ if (isset($_GET['eliminar'])) {
     $stmt->close();
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = (string)($_POST['_csrf'] ?? '');
+    $action = (string)($_POST['action'] ?? '');
+    $id = (int)($_POST['id'] ?? 0);
+
+    if (!hash_equals($csrf, $token)) {
+        $mensaje = 'Token invalido. Recarga la pagina e intenta nuevamente.';
+    } elseif ($id <= 0) {
+        $mensaje = 'Solicitud invalida.';
+    } elseif ($action === 'send') {
+        $sql = "SELECT * FROM recuperaciones_pendientes WHERE id = ? AND estado = 'pendiente'";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $solicitud = $result->fetch_assoc();
+        $stmt->close();
+
+        if ($solicitud) {
+            $mensaje_usuario = "Hola " . $solicitud['nombre_usuario'] . ", aqui esta tu enlace de recuperacion: " . $solicitud['enlace'];
+            $whatsapp_url = "https://wa.me/" . preg_replace('/\D+/', '', (string)$solicitud['whatsapp']) . "?text=" . urlencode($mensaje_usuario);
+
+            $sql_update = "UPDATE recuperaciones_pendientes SET estado = 'enviado', fecha_envio = NOW() WHERE id = ? AND estado = 'pendiente'";
+            $stmt_update = $conexion->prepare($sql_update);
+            $stmt_update->bind_param("i", $id);
+            $stmt_update->execute();
+            $stmt_update->close();
+
+            header("Location: $whatsapp_url");
+            exit;
+        }
+        $mensaje = 'La solicitud no existe o ya fue enviada.';
+    } elseif ($action === 'delete') {
+        $sql = "DELETE FROM recuperaciones_pendientes WHERE id = ?";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bind_param("i", $id);
+
+        if ($stmt->execute()) {
+            $mensaje = 'Solicitud eliminada.';
+        } else {
+            $mensaje = 'Error al eliminar la solicitud.';
+        }
+        $stmt->close();
+    } else {
+        $mensaje = 'Accion no valida.';
+    }
+}
+
 // Obtener solicitudes pendientes
 $sql = "SELECT * FROM recuperaciones_pendientes WHERE estado = 'pendiente' ORDER BY fecha_solicitud DESC";
 $result = $conexion->query($sql);
@@ -118,7 +173,7 @@ $result = $conexion->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-sidebar-3">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-polish-4">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0d0f14; color: #e5e5e5; padding: 30px 30px 30px calc(var(--sidebar-width) + 30px); }
@@ -230,7 +285,7 @@ $result = $conexion->query($sql);
         <?php if ($mensaje): ?>
             <div class="alert <?php echo strpos($mensaje, '❌') !== false ? 'alert-error' : 'alert-success'; ?>">
                 <i class="fas fa-<?php echo strpos($mensaje, '❌') !== false ? 'exclamation-circle' : 'check-circle'; ?>"></i>
-                <?php echo $mensaje; ?>
+                <?php echo recH($mensaje); ?>
             </div>
         <?php endif; ?>
         
@@ -285,17 +340,37 @@ $result = $conexion->query($sql);
                     </td>
                     <td>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <form method="POST" class="recovery-action-form" style="display:inline-flex;">
+                                <input type="hidden" name="_csrf" value="<?php echo recH($csrf); ?>">
+                                <input type="hidden" name="action" value="send">
+                                <input type="hidden" name="id" value="<?php echo (int)$solicitud['id']; ?>">
+                                <button type="submit" class="btn btn-whatsapp" title="Enviar enlace por WhatsApp">
+                                    <i class="fab fa-whatsapp"></i> Enviar Enlace
+                                </button>
+                            </form>
+                            <form method="POST" style="display:inline-flex;" onsubmit="return confirm('Eliminar esta solicitud?')">
+                                <input type="hidden" name="_csrf" value="<?php echo recH($csrf); ?>">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo (int)$solicitud['id']; ?>">
+                                <button type="submit" class="btn btn-danger" title="Eliminar solicitud">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            <span style="display:none">
                             <a href="?enviar=<?php echo $solicitud['id']; ?>" 
                                class="btn btn-whatsapp"
                                title="Enviar enlace por WhatsApp">
                                 <i class="fab fa-whatsapp"></i> Enviar Enlace
                             </a>
+                            </span>
+                            <span style="display:none">
                             <a href="?eliminar=<?php echo $solicitud['id']; ?>" 
                                class="btn btn-danger"
                                onclick="return confirm('¿Eliminar esta solicitud?')"
                                title="Eliminar solicitud">
                                 <i class="fas fa-trash"></i>
                             </a>
+                            </span>
                         </div>
                     </td>
                 </tr>

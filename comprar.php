@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/auth.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 
-$DEBUG = true;
+$DEBUG = false;
 
 function respond(array $data, int $http = 200): void
 {
@@ -30,9 +30,14 @@ function colExistsLocal(mysqli $cx, string $table, string $col): bool
 
 $action = $_POST['action'] ?? 'buy';
 $product_id = (int)($_POST['product_id'] ?? 0);
+$csrf = (string)($_POST['_csrf'] ?? '');
 
 if (!in_array($action, ['buy', 'add_to_cart'], true)) {
     respond(['ok' => false, 'code' => 'BAD_ACTION', 'message' => 'Accion no valida.'], 400);
+}
+
+if (empty($_SESSION['_csrf_purchase']) || !hash_equals((string)$_SESSION['_csrf_purchase'], $csrf)) {
+    respond(['ok' => false, 'code' => 'BAD_CSRF', 'message' => 'Sesion expirada. Recarga la pagina e intenta nuevamente.'], 403);
 }
 
 if (!function_exists('isLoggedIn') || !isLoggedIn()) {

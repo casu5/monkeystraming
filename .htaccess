@@ -1,0 +1,9 @@
+Options -Indexes
+
+<FilesMatch "^(hash|generar_hash|enviar_comprobante)\.php$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(sql|bak|log|env|ini|config)$">
+    Require all denied
+</FilesMatch>

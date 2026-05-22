@@ -4,6 +4,11 @@ require_once __DIR__ . '/includes/auth.php';
 
 $page_title = "Monkeystraming - Productos";
 
+if (empty($_SESSION['_csrf_purchase'])) {
+    $_SESSION['_csrf_purchase'] = bin2hex(random_bytes(32));
+}
+$csrf_purchase = $_SESSION['_csrf_purchase'];
+
 /** ===== Helpers ===== */
 function tableExists(mysqli $cx, string $table): bool {
     $t = $cx->real_escape_string($table);
@@ -571,6 +576,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 const userIsLogged  = <?php echo isLoggedIn() ? 'true' : 'false'; ?>;
 const userSaldo     = <?php echo $usuario_actual ? (float)$saldo_actual : 0; ?>;
 const redirectLogin = <?php echo json_encode('login.php?redirect='.$currentUrl, JSON_UNESCAPED_UNICODE); ?>;
+const csrfPurchase  = <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>;
 
 function cerrarModal(modal) {
     if (modal && modal.parentNode) modal.parentNode.removeChild(modal);
@@ -579,6 +585,7 @@ function cerrarModal(modal) {
 function postForm(url, dataObj){
     const body = new URLSearchParams();
     for (const k in dataObj) body.append(k, dataObj[k]);
+    body.append('_csrf', csrfPurchase);
 
     return fetch(url, {
         method: 'POST',

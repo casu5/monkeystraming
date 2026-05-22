@@ -8,6 +8,11 @@ $success_msg = '';
 $form_data = [];
 $registration_success = false; // para saber si el registro fue OK en este request
 
+if (empty($_SESSION['_csrf_register'])) {
+    $_SESSION['_csrf_register'] = bin2hex(random_bytes(32));
+}
+$csrf_register = $_SESSION['_csrf_register'];
+
 // Mensajes desde procesos (por si algún día los usas)
 if (isset($_SESSION['error'])) {
     $error_msg = $_SESSION['error'];
@@ -41,6 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validaciones
     $errors = [];
+
+    if (!hash_equals($csrf_register, (string)($_POST['_csrf'] ?? ''))) {
+        $errors[] = "Token invalido. Recarga la pagina e intenta nuevamente.";
+    }
 
     if (empty($nombre) || strlen($nombre) < 3) {
         $errors[] = "El nombre debe tener al menos 3 caracteres";
@@ -836,6 +845,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="auth-subtitle">Únete a miles de usuarios que disfrutan de contenido premium</p>
 
         <form action="" method="POST" id="registerForm">
+            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($csrf_register, ENT_QUOTES, 'UTF-8'); ?>">
             <!-- Paso 1: Información básica -->
             <div class="form-step" id="step1">
                 <div class="input-group">

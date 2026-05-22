@@ -22,6 +22,11 @@ $admin = getCurrentUser();
 $adminId = (int)($admin['id'] ?? $_SESSION['user_id'] ?? 0);
 $success = '';
 $error = '';
+
+if (empty($_SESSION['_csrf_admin_sellers'])) {
+    $_SESSION['_csrf_admin_sellers'] = bin2hex(random_bytes(32));
+}
+$csrfAdminSellers = $_SESSION['_csrf_admin_sellers'];
 $migrationReady = tableExistsAdminSellers($conexion, 'usuarios')
     && tableExistsAdminSellers($conexion, 'productos')
     && tableExistsAdminSellers($conexion, 'compras')
@@ -37,7 +42,9 @@ if ($migrationReady && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $tienda = trim((string)($_POST['tienda_nombre'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
 
-    if ($nombre === '' || strlen($nombre) < 3) {
+    if (!hash_equals($csrfAdminSellers, (string)($_POST['_csrf'] ?? ''))) {
+        $error = 'Token invalido. Recarga la pagina e intenta nuevamente.';
+    } elseif ($nombre === '' || strlen($nombre) < 3) {
         $error = 'El nombre debe tener al menos 3 caracteres.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Correo invalido.';
@@ -288,7 +295,7 @@ $page_title = "Vendedores - Admin";
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-sidebar-3">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-polish-4">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
@@ -342,6 +349,7 @@ $page_title = "Vendedores - Admin";
     <form class="card" method="POST">
       <h2 style="color:#fff;margin-bottom:8px;">Nuevo vendedor</h2>
       <p class="muted">El cliente se registra solo; el vendedor lo crea el admin.</p>
+      <input type="hidden" name="_csrf" value="<?php echo h($csrfAdminSellers); ?>">
 
       <label>Nombre</label>
       <input name="nombre" required minlength="3">

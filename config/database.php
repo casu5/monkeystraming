@@ -26,12 +26,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
 $db_config = [
-    'host'   => 'localhost',
-    'user'   => 'root',
-    'pass'   => '',
-    'name'   => 'monkeystraming_2',
-    'port'   => 3306,
-    'charset'=> 'utf8mb4',
+    'host'   => getenv('DB_HOST') ?: 'localhost',
+    'user'   => getenv('DB_USER') ?: 'root',
+    'pass'   => getenv('DB_PASS') ?: '',
+    'name'   => getenv('DB_NAME') ?: 'monkeystraming_2',
+    'port'   => (int)(getenv('DB_PORT') ?: 3306),
+    'charset'=> getenv('DB_CHARSET') ?: 'utf8mb4',
 ];
 
 

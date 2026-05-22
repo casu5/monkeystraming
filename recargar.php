@@ -32,21 +32,48 @@ if ($metodos_result) {
 // Montos sugeridos
 $montos_sugeridos = [10, 20, 50, 100, 200, 500];
 
+if (empty($_SESSION['_csrf_recharge'])) {
+    $_SESSION['_csrf_recharge'] = bin2hex(random_bytes(32));
+}
+$csrf_recharge = $_SESSION['_csrf_recharge'];
+
 // Manejo del formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $metodo = cleanInput($_POST['metodo'] ?? '');
     $monto  = floatval($_POST['monto'] ?? 0);
+    $postedCsrf = (string)($_POST['_csrf'] ?? '');
 
     $min_recharge = 5.00;
     $max_recharge = 5000.00;
 
-    if ($monto < $min_recharge || $monto > $max_recharge) {
+    if (!hash_equals($csrf_recharge, $postedCsrf)) {
+        $error_msg = "Token invalido. Recarga la pagina e intenta nuevamente.";
+    } elseif ($monto < $min_recharge || $monto > $max_recharge) {
         $error_msg = "El monto debe estar entre S/ {$min_recharge} y S/ {$max_recharge}";
     } elseif (!isset($metodos_pago[$metodo])) {
         $error_msg = "Método de pago no válido";
     } elseif (!isset($_FILES['comprobante']) || $_FILES['comprobante']['error'] !== UPLOAD_ERR_OK) {
         $error_msg = "Debes adjuntar el comprobante de pago.";
     } else {
+        $comprobante = $_FILES['comprobante'];
+        $maxUploadBytes = 5 * 1024 * 1024;
+        $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+        $allowedMime = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+        $extension = strtolower(pathinfo((string)$comprobante['name'], PATHINFO_EXTENSION));
+
+        if (($comprobante['size'] ?? 0) <= 0 || ($comprobante['size'] ?? 0) > $maxUploadBytes) {
+            $error_msg = "El comprobante debe pesar maximo 5MB.";
+        } elseif (!in_array($extension, $allowedExt, true)) {
+            $error_msg = "Formato no permitido. Sube JPG, PNG, WEBP o PDF.";
+        } else {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = (string)$finfo->file($comprobante['tmp_name']);
+            if (!in_array($mime, $allowedMime, true)) {
+                $error_msg = "El comprobante no parece un archivo valido.";
+            }
+        }
+
+        if ($error_msg === '') {
 
         $metodo_info         = $metodos_pago[$metodo];
         $comision_porcentaje = floatval($metodo_info['comision_porcentaje'] ?? 0);
@@ -66,11 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $recarga_id = $stmt->insert_id;
 
-            // Guardar comprobante
-            $comprobante = $_FILES['comprobante'];
             if ($comprobante['error'] === UPLOAD_ERR_OK) {
-                $extension      = strtolower(pathinfo($comprobante['name'], PATHINFO_EXTENSION));
-                $nombre_archivo = "recarga_" . $recarga_id . "_" . time() . "." . $extension;
+                $nombre_archivo = "recarga_" . $recarga_id . "_" . bin2hex(random_bytes(8)) . "." . $extension;
                 $ruta_destino   = "assets/comprobantes/" . $nombre_archivo;
 
                 if (!is_dir('assets/comprobantes')) {
@@ -91,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_msg = "Error al procesar la recarga. Por favor, intenta de nuevo.";
         }
     }
+}
 }
 
 // Mensajes flash
@@ -912,6 +937,7 @@ $recargas_recientes = $recargas_stmt->get_result();
     </div>
 
     <form action="" method="POST" enctype="multipart/form-data" id="recargaForm">
+        <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($csrf_recharge, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="recarga-grid">
             <!-- COLUMNA MÉTODOS -->
             <div class="card">

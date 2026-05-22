@@ -108,6 +108,11 @@ if (tableExists($conexion, 'tickets') && colExists($conexion, 'tickets', 'estado
 $success = '';
 $error   = '';
 
+if (empty($_SESSION['_csrf_admin_stock'])) {
+    $_SESSION['_csrf_admin_stock'] = bin2hex(random_bytes(32));
+}
+$csrfAdminStock = $_SESSION['_csrf_admin_stock'];
+
 $cuentasTieneModoVenta = tableExists($conexion, 'cuentas') && colExists($conexion, 'cuentas', 'modo_venta');
 $cuentasTieneVendedor = tableExists($conexion, 'cuentas') && colExists($conexion, 'cuentas', 'vendedor_id');
 
@@ -175,7 +180,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
     $modoVentaPost = strtoupper(trim((string)($_POST['modo_venta'] ?? 'PERFIL')));
     $modoVentaPost = ($modoVentaPost === 'CUENTA_COMPLETA') ? 'CUENTA_COMPLETA' : 'PERFIL';
 
-    if ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
+    if (!hash_equals($csrfAdminStock, (string)($_POST['_csrf'] ?? ''))) {
+        $error = "Token invalido. Recarga la pagina e intenta nuevamente.";
+    } elseif ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
         $error = "Completa producto, usuario/correo y contraseÃ±a.";
     } else {
 
@@ -318,7 +325,7 @@ $page_title = "Stock - Admin - Monkeystraming";
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-sidebar-3">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-polish-4">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
@@ -485,6 +492,7 @@ $page_title = "Stock - Admin - Monkeystraming";
 
       <form method="post" id="formStock">
         <input type="hidden" name="action" value="add_account">
+        <input type="hidden" name="_csrf" value="<?php echo h($csrfAdminStock); ?>">
 
         <div class="row">
           <div>

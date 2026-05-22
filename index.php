@@ -4,6 +4,11 @@ require_once __DIR__ . '/includes/auth.php';
 
 $page_title = "Monkeystraming - Streaming Premium";
 
+if (empty($_SESSION['_csrf_purchase'])) {
+    $_SESSION['_csrf_purchase'] = bin2hex(random_bytes(32));
+}
+$csrf_purchase = $_SESSION['_csrf_purchase'];
+
 // Obtener estadísticas reales de la BD
 $stats_sql = "SELECT 
     (SELECT COUNT(*) FROM usuarios) AS total_usuarios,
@@ -1697,6 +1702,7 @@ async function ejecutarCompra(productId, btnPrincipal, btnCancelar) {
     const body = new URLSearchParams();
     body.append('action', 'buy');
     body.append('product_id', String(productId));
+    body.append('_csrf', <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>);
 
     const r = await fetch('comprar.php', {
       method: 'POST',

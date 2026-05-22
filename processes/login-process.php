@@ -25,13 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuario = $result->fetch_assoc();
 
             // Verificar estado
-            if ($usuario['estado'] !== 'activo') {
+            if (!in_array(strtolower((string)($usuario['estado'] ?? 'activo')), ['activo', 'active', '1', ''], true)) {
                 $_SESSION['error'] = "Tu cuenta está suspendida o eliminada";
                 redirect('../login.php');
             }
 
             // Verificar contraseña
             if (password_verify($password, $usuario['password'])) {
+                session_regenerate_id(true);
                 // Crear sesión
                 $_SESSION['user_id']    = $usuario['id'];
                 $_SESSION['user_name']  = $usuario['nombre'];

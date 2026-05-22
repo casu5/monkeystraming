@@ -49,6 +49,11 @@ $migrationReady = stockTableExists($conexion, 'productos')
 $success = '';
 $error = '';
 
+if (empty($_SESSION['_csrf_seller_stock'])) {
+    $_SESSION['_csrf_seller_stock'] = bin2hex(random_bytes(32));
+}
+$csrfSellerStock = $_SESSION['_csrf_seller_stock'];
+
 $productos = [];
 if ($migrationReady) {
     $st = $conexion->prepare("SELECT id, nombre, tipo_venta, stock FROM productos WHERE vendedor_id=? AND activo=1 ORDER BY nombre ASC");
@@ -66,7 +71,9 @@ if ($migrationReady && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $pin = trim((string)($_POST['pin'] ?? ''));
     $maxPerfiles = max(1, (int)($_POST['max_perfiles'] ?? 1));
 
-    if ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
+    if (!hash_equals($csrfSellerStock, (string)($_POST['_csrf'] ?? ''))) {
+        $error = 'Token invalido. Recarga la pagina e intenta nuevamente.';
+    } elseif ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
         $error = 'Completa producto, usuario/correo y password.';
     } else {
         $st = $conexion->prepare("SELECT id, tipo_venta FROM productos WHERE id=? AND vendedor_id=? LIMIT 1");
@@ -178,6 +185,7 @@ $page_title = "Mi stock - Vendedor";
   <section class="grid">
     <form class="card" method="POST">
       <h2>Agregar cuenta</h2>
+      <input type="hidden" name="_csrf" value="<?php echo h($csrfSellerStock); ?>">
 
       <label>Producto</label>
       <select name="producto_id" required>

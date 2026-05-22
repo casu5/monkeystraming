@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
 
         $sql = "
-            SELECT id, nombre, email, password, role, saldo
+            SELECT id, nombre, email, password, role, saldo, estado
             FROM usuarios
             WHERE email = ?
             LIMIT 1
@@ -88,11 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($user = $result->fetch_assoc()) {
 
-                if (password_verify($password, $user['password'])) {
+                if (!in_array(strtolower((string)($user['estado'] ?? 'activo')), ['activo', 'active', '1', ''], true)) {
+                    $error_msg = "Correo o contraseÃ±a incorrectos.";
+                } elseif (password_verify($password, $user['password'])) {
                     $role = normalizeUserRole($user['role'] ?? 'cliente');
                     $safeRedirect = safeLoginRedirect($producto_redirect);
 
                     // ✅ Sesión normal (USER/ADMIN)
+                    session_regenerate_id(true);
                     $_SESSION['user_id']    = $user['id'];
                     $_SESSION['user_name']  = $user['nombre'];
                     $_SESSION['user_email'] = $user['email'];

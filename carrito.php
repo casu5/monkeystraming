@@ -7,6 +7,16 @@ requireLogin('/login.php');
 $page_title = "Carrito - Monkeystraming";
 $usuario_actual = getCurrentUser();
 
+if (empty($_SESSION['_csrf_purchase'])) {
+    $_SESSION['_csrf_purchase'] = bin2hex(random_bytes(32));
+}
+$csrf_purchase = $_SESSION['_csrf_purchase'];
+
+if (empty($_SESSION['_csrf_cart'])) {
+    $_SESSION['_csrf_cart'] = bin2hex(random_bytes(32));
+}
+$csrf_cart = $_SESSION['_csrf_cart'];
+
 function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
@@ -16,6 +26,11 @@ if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $productId = (int)($_POST['product_id'] ?? 0);
+
+    if (!hash_equals($csrf_cart, (string)($_POST['_csrf'] ?? ''))) {
+        $_SESSION['error_msg'] = 'Token invalido. Recarga la pagina e intenta nuevamente.';
+        redirect('carrito.php');
+    }
 
     if ($action === 'remove' && $productId > 0) {
         unset($_SESSION['cart'][$productId]);
@@ -133,6 +148,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
               <div class="actions" style="margin-top:10px;justify-content:flex-end;">
                 <button class="btn primary js-buy" type="button" data-id="<?php echo $pid; ?>"><i class="fas fa-credit-card"></i> Comprar</button>
                 <form method="POST">
+                  <input type="hidden" name="_csrf" value="<?php echo h($csrf_cart); ?>">
                   <input type="hidden" name="action" value="remove">
                   <input type="hidden" name="product_id" value="<?php echo $pid; ?>">
                   <button class="btn danger" type="submit"><i class="fas fa-trash"></i></button>
@@ -150,6 +166,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
         <div class="summary-row"><span>Total</span><strong class="summary-total">S/ <?php echo number_format($total, 2); ?></strong></div>
         <p class="muted" style="line-height:1.45;margin:14px 0;">La compra usa tu saldo disponible y entrega las credenciales al instante si hay stock.</p>
         <form method="POST" onsubmit="return confirm('¿Vaciar todo el carrito?');">
+          <input type="hidden" name="_csrf" value="<?php echo h($csrf_cart); ?>">
           <input type="hidden" name="action" value="clear">
           <button class="btn secondary" style="width:100%;" type="submit"><i class="fas fa-broom"></i> Vaciar carrito</button>
         </form>
@@ -172,6 +189,7 @@ async function buyProduct(productId, item) {
     const body = new URLSearchParams();
     body.append('action', 'buy');
     body.append('product_id', String(productId));
+    body.append('_csrf', <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>);
 
     const response = await fetch('comprar.php', {
       method: 'POST',

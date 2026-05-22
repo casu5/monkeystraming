@@ -20,6 +20,11 @@ $success_msg  = '';
 $error_msg    = '';
 $errors       = [];
 
+if (empty($_SESSION['_csrf_profile'])) {
+    $_SESSION['_csrf_profile'] = bin2hex(random_bytes(32));
+}
+$csrf_profile = $_SESSION['_csrf_profile'];
+
 // Valores por defecto de los campos
 $nombre_value = $usuario['nombre'];
 $email_value  = $usuario['email'];
@@ -36,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Mantener valores en el form
     $nombre_value = $nombre;
     $email_value  = $email;
+
+    if (!hash_equals($csrf_profile, (string)($_POST['_csrf'] ?? ''))) {
+        $errors[] = "Token invalido. Recarga la pagina e intenta nuevamente.";
+    }
 
     // Validaciones básicas
     if (empty($nombre) || strlen($nombre) < 3) {
@@ -208,6 +217,7 @@ include '../includes/header.php';
                 <h3><i class="fas fa-user-edit"></i> Editar datos</h3>
 
                 <form action="" method="POST" autocomplete="off" class="profile-form">
+                    <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($csrf_profile, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="form-group">
                         <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
                         <input

@@ -9,16 +9,38 @@ $page_title = "Nueva Contraseña";
 $error = '';
 $success = '';
 
-$token = $_GET['token'] ?? '';
+$token = (string)($_POST['token'] ?? ($_GET['token'] ?? ''));
+$resetRequest = null;
 
 // Verificar token
-if (empty($token) || !isset($_SESSION['rec_token']) || $_SESSION['rec_token'] !== $token) {
+if (false && (empty($token) || !isset($_SESSION['rec_token']) || $_SESSION['rec_token'] !== $token)) {
     $error = '❌ Enlace inválido o expirado';
-} elseif (isset($_SESSION['rec_expira']) && $_SESSION['rec_expira'] < time()) {
+} elseif (false && isset($_SESSION['rec_expira']) && $_SESSION['rec_expira'] < time()) {
     $error = '❌ El enlace ha expirado (30 minutos)';
 }
 
 // Cambiar contraseña
+if ($token === '' || !preg_match('/^[a-f0-9]{64}$/i', $token)) {
+    $error = 'Enlace invalido o expirado';
+} else {
+    $stmt = $conexion->prepare("
+        SELECT id, usuario_id, fecha_solicitud, estado
+        FROM recuperaciones_pendientes
+        WHERE token = ?
+          AND estado IN ('pendiente', 'enviado')
+          AND fecha_solicitud >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+        LIMIT 1
+    ");
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $resetRequest = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$resetRequest) {
+        $error = 'Enlace invalido o expirado';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
     $password = $_POST['password'];
     $confirm = $_POST['password_confirm'];
@@ -27,15 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         $error = 'La contraseña debe tener al menos 6 caracteres';
     } elseif ($password !== $confirm) {
         $error = 'Las contraseñas no coinciden';
-    } elseif (isset($_SESSION['rec_usuario_id'])) {
+    } elseif ($resetRequest) {
         // Actualizar contraseña
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $conexion->prepare("UPDATE usuarios SET password = ? WHERE id = ?");
-        $stmt->bind_param("si", $hash, $_SESSION['rec_usuario_id']);
+        $usuarioId = (int)$resetRequest['usuario_id'];
+        $stmt->bind_param("si", $hash, $usuarioId);
         
         if ($stmt->execute()) {
             $success = '✅ Contraseña actualizada correctamente';
             // Limpiar sesión
+            $del = $conexion->prepare("DELETE FROM recuperaciones_pendientes WHERE id = ?");
+            $requestId = (int)$resetRequest['id'];
+            $del->bind_param("i", $requestId);
+            $del->execute();
+            $del->close();
             unset($_SESSION['rec_token'], $_SESSION['rec_usuario_id'], $_SESSION['rec_whatsapp'], $_SESSION['rec_expira']);
         } else {
             $error = '❌ Error al actualizar la contraseña';
@@ -131,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
                 </div>
             <?php else: ?>
             <form method="POST" action="">
+                <input type="hidden" name="token" value="<?php echo htmlspecialchars($token, ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="form-group">
                     <label><i class="fas fa-key"></i> Nueva Contraseña</label>
                     <div class="password-container">

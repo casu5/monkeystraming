@@ -58,6 +58,11 @@ $migrationReady = sellerTableExists($conexion, 'productos') && sellerColExists($
 $success = '';
 $error = '';
 
+if (empty($_SESSION['_csrf_seller_products'])) {
+    $_SESSION['_csrf_seller_products'] = bin2hex(random_bytes(32));
+}
+$csrfSellerProducts = $_SESSION['_csrf_seller_products'];
+
 $categorias = [];
 if (sellerTableExists($conexion, 'categorias')) {
     $rs = $conexion->query("SELECT id, nombre FROM categorias WHERE visible=1 ORDER BY nombre ASC");
@@ -69,6 +74,10 @@ if ($migrationReady && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $productoId = (int)($_POST['producto_id'] ?? 0);
 
     try {
+        if (!hash_equals($csrfSellerProducts, (string)($_POST['_csrf'] ?? ''))) {
+            throw new Exception('Token invalido. Recarga la pagina e intenta nuevamente.');
+        }
+
         if ($action === 'create' || $action === 'update') {
             $nombre = trim((string)($_POST['nombre'] ?? ''));
             $descripcion = trim((string)($_POST['descripcion'] ?? ''));
@@ -219,6 +228,7 @@ $page_title = "Mis productos - Vendedor";
   <section class="grid">
     <form class="card" method="POST" enctype="multipart/form-data">
       <h2><?php echo $edit ? 'Editar producto' : 'Nuevo producto'; ?></h2>
+      <input type="hidden" name="_csrf" value="<?php echo h($csrfSellerProducts); ?>">
       <input type="hidden" name="action" value="<?php echo $edit ? 'update' : 'create'; ?>">
       <?php if ($edit): ?><input type="hidden" name="producto_id" value="<?php echo (int)$edit['id']; ?>"><?php endif; ?>
 
@@ -283,6 +293,7 @@ $page_title = "Mis productos - Vendedor";
             <td>
               <a class="btn secondary" href="productos.php?edit=<?php echo (int)$p['id']; ?>"><i class="fas fa-edit"></i></a>
               <form method="POST" style="display:inline;">
+                <input type="hidden" name="_csrf" value="<?php echo h($csrfSellerProducts); ?>">
                 <input type="hidden" name="action" value="toggle">
                 <input type="hidden" name="producto_id" value="<?php echo (int)$p['id']; ?>">
                 <button class="btn secondary" type="submit"><i class="fas fa-power-off"></i></button>
