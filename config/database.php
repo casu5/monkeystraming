@@ -9,6 +9,15 @@ declare(strict_types=1);
 // Zona horaria (ajústala si deseas)
 date_default_timezone_set('America/Lima');
 
+$appEnv = strtolower((string)(getenv('APP_ENV') ?: 'local'));
+if ($appEnv === 'production') {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(E_ALL);
+} else {
+    error_reporting(E_ALL);
+}
+
 // Arranca sesión de forma segura
 if (session_status() === PHP_SESSION_NONE) {
     // Cookies seguras (si usas HTTPS, secure=true)

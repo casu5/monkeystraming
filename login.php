@@ -18,6 +18,11 @@ if (isLoggedIn()) {
 
 $producto_redirect = $_GET['redirect'] ?? '';
 
+if (empty($_SESSION['_csrf_login'])) {
+    $_SESSION['_csrf_login'] = bin2hex(random_bytes(32));
+}
+$csrf_login = $_SESSION['_csrf_login'];
+
 function safeLoginRedirect(string $target): string
 {
     $target = trim($target);
@@ -67,8 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $email    = cleanInput($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $postedCsrf = (string)($_POST['_csrf'] ?? '');
 
-    if ($email === '' || $password === '') {
+    if (!hash_equals($csrf_login, $postedCsrf)) {
+        $error_msg = "Token invalido. Recarga la pagina e intenta nuevamente.";
+    } elseif ($email === '' || $password === '') {
         $error_msg = "Debe ingresar correo y contraseña.";
     } else {
 
@@ -620,6 +628,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="auth-subtitle">Ingresa a tu cuenta para acceder a contenido exclusivo</p>
 
         <form action="" method="POST" id="loginForm">
+            <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($csrf_login, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="input-group">
                 <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
                 <input type="email" name="email" id="email" required 

@@ -356,21 +356,21 @@ $result = $conexion->query($sql);
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
-                            <span style="display:none">
+                            <?php if (false): ?>
                             <a href="?enviar=<?php echo $solicitud['id']; ?>" 
                                class="btn btn-whatsapp"
                                title="Enviar enlace por WhatsApp">
                                 <i class="fab fa-whatsapp"></i> Enviar Enlace
                             </a>
-                            </span>
-                            <span style="display:none">
+                            <?php endif; ?>
+                            <?php if (false): ?>
                             <a href="?eliminar=<?php echo $solicitud['id']; ?>" 
                                class="btn btn-danger"
                                onclick="return confirm('¿Eliminar esta solicitud?')"
                                title="Eliminar solicitud">
                                 <i class="fas fa-trash"></i>
                             </a>
-                            </span>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>
