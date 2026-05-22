@@ -313,11 +313,11 @@ $page_title = "Configuración - Admin - Monkeystraming";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo h($page_title); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/panel-shell.css">
+    <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-sidebar-3">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-        body{background:linear-gradient(135deg,#0d0f14 0%,#11131a 35%,#0b0c11 100%);color:#e5e5e5;min-height:100vh;padding:30px 30px 30px 302px}
+        body{background:linear-gradient(135deg,#0d0f14 0%,#11131a 35%,#0b0c11 100%);color:#e5e5e5;min-height:100vh;padding:30px 30px 30px calc(var(--sidebar-width) + 30px)}
         .topbar{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
         .title h1{font-size:1.6rem;color:#fff}
         .title p{color:#aaa;margin-top:4px}

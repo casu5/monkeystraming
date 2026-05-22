@@ -54,6 +54,7 @@ try {
 
     $productosHasVendedor = colExistsLocal($conexion, 'productos', 'vendedor_id');
     $productosHasDuracion = colExistsLocal($conexion, 'productos', 'duracion_dias');
+    $productosHasTipoVenta = colExistsLocal($conexion, 'productos', 'tipo_venta');
     $cuentasHasVendedor = colExistsLocal($conexion, 'cuentas', 'vendedor_id');
     $comprasHasCliente = colExistsLocal($conexion, 'compras', 'cliente_id');
     $comprasHasVendedor = colExistsLocal($conexion, 'compras', 'vendedor_id');
@@ -64,7 +65,8 @@ try {
 
     $selectVendedor = $productosHasVendedor ? 'vendedor_id' : 'NULL AS vendedor_id';
     $selectDuracion = $productosHasDuracion ? 'duracion_dias' : '30 AS duracion_dias';
-    $stmtP = $conexion->prepare("SELECT id, nombre, precio, $selectVendedor, $selectDuracion FROM productos WHERE id=? AND activo=1 LIMIT 1");
+    $selectTipoVenta = $productosHasTipoVenta ? 'tipo_venta' : "'PERFIL' AS tipo_venta";
+    $stmtP = $conexion->prepare("SELECT id, nombre, precio, $selectVendedor, $selectDuracion, $selectTipoVenta FROM productos WHERE id=? AND activo=1 LIMIT 1");
     $stmtP->bind_param("i", $product_id);
     $stmtP->execute();
     $prod = $stmtP->get_result()->fetch_assoc();
@@ -78,6 +80,8 @@ try {
     $nombreProducto = (string)$prod['nombre'];
     $vendedorId = isset($prod['vendedor_id']) ? (int)$prod['vendedor_id'] : null;
     $duracionDias = max(1, (int)($prod['duracion_dias'] ?? 30));
+    $tipoVenta = strtoupper((string)($prod['tipo_venta'] ?? 'PERFIL'));
+    $tipoVenta = $tipoVenta === 'CUENTA_COMPLETA' ? 'CUENTA_COMPLETA' : 'PERFIL';
     $venceAt = date('Y-m-d H:i:s', time() + ($duracionDias * 86400));
     $fecha_compra = date('Y-m-d H:i:s');
 
@@ -240,6 +244,46 @@ try {
     $stmtUpdatePerfil->bind_param("ii", $compra_id, $perfilId);
     $stmtUpdatePerfil->execute();
     $stmtUpdatePerfil->close();
+
+    $cuentaId = (int)$stock['cuenta_id'];
+    $stmtRemaining = $conexion->prepare("SELECT COUNT(*) c FROM cuenta_perfiles WHERE cuenta_id=? AND estado='DISPONIBLE'");
+    $stmtRemaining->bind_param("i", $cuentaId);
+    $stmtRemaining->execute();
+    $remainingProfiles = (int)($stmtRemaining->get_result()->fetch_assoc()['c'] ?? 0);
+    $stmtRemaining->close();
+
+    if ($remainingProfiles <= 0) {
+        $stmtAccountSold = $conexion->prepare("UPDATE cuentas SET estado='VENDIDA_COMPLETA' WHERE id=?");
+        $stmtAccountSold->bind_param("i", $cuentaId);
+        $stmtAccountSold->execute();
+        $stmtAccountSold->close();
+    }
+
+    if (colExistsLocal($conexion, 'productos', 'stock')) {
+        $stockSellerFilter = ($cuentasHasVendedor && $vendedorId) ? " AND cu.vendedor_id = ? " : "";
+        $stmtStock = $conexion->prepare("
+            SELECT COUNT(*) c
+            FROM cuenta_perfiles cp
+            INNER JOIN cuentas cu ON cu.id = cp.cuenta_id
+            WHERE cu.producto_id=?
+              $stockSellerFilter
+              AND cu.estado='DISPONIBLE'
+              AND cp.estado='DISPONIBLE'
+        ");
+        if ($cuentasHasVendedor && $vendedorId) {
+            $stmtStock->bind_param("ii", $product_id, $vendedorId);
+        } else {
+            $stmtStock->bind_param("i", $product_id);
+        }
+        $stmtStock->execute();
+        $stockRestante = (int)($stmtStock->get_result()->fetch_assoc()['c'] ?? 0);
+        $stmtStock->close();
+
+        $stmtProductStock = $conexion->prepare("UPDATE productos SET stock=? WHERE id=?");
+        $stmtProductStock->bind_param("ii", $stockRestante, $product_id);
+        $stmtProductStock->execute();
+        $stmtProductStock->close();
+    }
 
     $stmtF = $conexion->prepare("SELECT vendido_at, vence_at FROM cuenta_perfiles WHERE id=? LIMIT 1");
     $stmtF->bind_param("i", $perfilId);

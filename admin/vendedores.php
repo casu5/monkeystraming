@@ -288,12 +288,12 @@ $page_title = "Vendedores - Admin";
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo h($page_title); ?></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../assets/css/panel-shell.css">
+  <link rel="stylesheet" href="../assets/css/panel-shell.css?v=admin-sidebar-3">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
     body{background:linear-gradient(135deg,#0d0f14,#11131a 45%,#0b0c11);color:#e5e5e5;min-height:100vh}
-    .wrap{max-width:none;margin:0;padding:32px 24px 32px 302px}
+    .wrap{width:calc(100% - var(--sidebar-width));max-width:none;margin:0 0 0 var(--sidebar-width);padding:32px 24px}
     .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
     h1{color:#fff;font-size:1.8rem}
     .muted{color:#aaa}
@@ -320,7 +320,7 @@ $page_title = "Vendedores - Admin";
     th,td{text-align:left;padding:12px;border-bottom:1px solid rgba(255,255,255,.07)}
     th{color:#9a9a9a;font-size:.86rem}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    @media(max-width:992px){.wrap{padding:82px 16px 24px}}
+    @media(max-width:992px){.wrap{width:100%;margin-left:0;padding:82px 16px 24px}}
   </style>
 </head>
 <body>
