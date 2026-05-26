@@ -29,6 +29,7 @@ if (!function_exists('adminSidebarStats')) {
             'productos_agotados' => 0,
             'recargas_pendientes' => 0,
             'recuperaciones' => 0,
+            'retiros_pendientes' => 0,
             'tickets_soporte' => 0,
         ];
 
@@ -56,6 +57,11 @@ if (!function_exists('adminSidebarStats')) {
         if (adminSidebarTableExists($cx, 'recuperaciones_pendientes') && adminSidebarColExists($cx, 'recuperaciones_pendientes', 'estado')) {
             $rs = $cx->query("SELECT COUNT(*) c FROM recuperaciones_pendientes WHERE estado='pendiente'");
             if ($rs) $stats['recuperaciones'] = (int)($rs->fetch_assoc()['c'] ?? 0);
+        }
+
+        if (adminSidebarTableExists($cx, 'vendedor_retiros') && adminSidebarColExists($cx, 'vendedor_retiros', 'estado')) {
+            $rs = $cx->query("SELECT COUNT(*) c FROM vendedor_retiros WHERE estado='pendiente'");
+            if ($rs) $stats['retiros_pendientes'] = (int)($rs->fetch_assoc()['c'] ?? 0);
         }
 
         if (adminSidebarTableExists($cx, 'tickets') && adminSidebarColExists($cx, 'tickets', 'estado')) {
@@ -100,6 +106,7 @@ if (!function_exists('renderAdminSidebar')) {
                 <a href="admin_recuperaciones.php" class="menu-item <?php echo adminSidebarActive('admin_recuperaciones.php', $currentPage); ?>"><i class="fab fa-whatsapp"></i><span>Recuperaciones</span><span class="menu-badge"><?php echo (int)$stats['recuperaciones']; ?></span></a>
                 <a href="usuarios.php" class="menu-item <?php echo adminSidebarActive('usuarios.php', $currentPage); ?>"><i class="fas fa-users"></i><span>Usuarios</span><span class="menu-badge"><?php echo (int)$stats['usuarios_nuevos_hoy']; ?></span></a>
                 <a href="vendedores.php" class="menu-item <?php echo adminSidebarActive('vendedores.php', $currentPage); ?>"><i class="fas fa-user-tie"></i><span>Vendedores</span></a>
+                <a href="retiros.php" class="menu-item <?php echo adminSidebarActive('retiros.php', $currentPage); ?>"><i class="fas fa-money-bill-transfer"></i><span>Retiros</span><span class="menu-badge"><?php echo (int)$stats['retiros_pendientes']; ?></span></a>
                 <a href="productos-admin.php" class="menu-item <?php echo adminSidebarActive('productos-admin.php', $currentPage); ?>"><i class="fas fa-box-open"></i><span>Productos</span><span class="menu-badge"><?php echo (int)$stats['productos_agotados']; ?></span></a>
                 <a href="stock.php" class="menu-item <?php echo adminSidebarActive('stock.php', $currentPage); ?>"><i class="fas fa-warehouse"></i><span>Stock</span></a>
             </div>

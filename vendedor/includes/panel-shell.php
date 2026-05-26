@@ -12,6 +12,7 @@ if (!function_exists('sellerPanelStart')) {
             'productos' => ['href' => 'productos.php', 'icon' => 'fa-box-open', 'label' => 'Productos'],
             'stock' => ['href' => 'stock.php', 'icon' => 'fa-key', 'label' => 'Stock'],
             'ventas' => ['href' => 'ventas.php', 'icon' => 'fa-receipt', 'label' => 'Ventas'],
+            'retirar' => ['href' => 'retirar.php', 'icon' => 'fa-money-bill-transfer', 'label' => 'Retirar'],
         ];
         ?>
 <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
