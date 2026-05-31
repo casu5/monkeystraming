@@ -1,5 +1,6 @@
 <?php
 require_once '../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // ✅ INICIAR SESIÓN SI NO ESTÁ INICIADA
 if (session_status() === PHP_SESSION_NONE) {
@@ -15,9 +16,7 @@ if (!function_exists('redirect')) {
 }
 
 // ✅ VERIFICAR LOGIN MANUALMENTE
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    redirect('../login.php');
-}
+requireRole(['cliente', 'admin']);
 
 function tableExistsUserHistory(mysqli $cx, string $table): bool {
     $t = $cx->real_escape_string($table);

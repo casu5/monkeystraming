@@ -96,9 +96,18 @@ function adminWhatsapp(mysqli $cx): string {
     $row = $rs ? $rs->fetch_assoc() : null;
     return preg_replace('/\D+/', '', (string)($row['whatsapp'] ?? ''));
 }
-function adminNotifyUrl(string $phone, array $seller, array $request): string {
+function adminNotifyUrl(string $phone, array $seller, array $request): string { 
     $message = "Hola admin, soy " . ($seller['nombre'] ?? 'vendedor') . ". Acabo de solicitar un retiro #" . (int)$request['id'] . " por S/ " . number_format((float)$request['monto'], 2) . ". Metodo: " . ($request['metodo'] ?? '-') . ". Por favor revisalo.";
     return $phone !== '' ? "https://wa.me/" . rawurlencode($phone) . "?text=" . rawurlencode($message) : '';
+}
+function cancelPendingWithdrawal(mysqli $cx, int $sellerId, int $requestId): bool {
+    if ($sellerId <= 0 || $requestId <= 0) return false;
+    $st = $cx->prepare("UPDATE vendedor_retiros SET estado='rechazado', nota=CONCAT(COALESCE(nota,''), CASE WHEN COALESCE(nota,'')='' THEN '' ELSE '\n' END, 'Cancelado por el vendedor') WHERE id=? AND vendedor_id=? AND estado='pendiente'");
+    $st->bind_param("ii", $requestId, $sellerId);
+    $st->execute();
+    $ok = $st->affected_rows > 0;
+    $st->close();
+    return $ok;
 }
 
 ensureWithdrawalsTable($conexion);
@@ -118,6 +127,14 @@ $lastRequestMethod = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf, (string)($_POST['_csrf'] ?? ''))) {
         $error = 'Token invalido. Recarga la pagina e intenta nuevamente.';
+    } elseif (($_POST['accion'] ?? '') === 'cancelar_retiro') {
+        $requestId = (int)($_POST['retiro_id'] ?? 0);
+        if (cancelPendingWithdrawal($conexion, $sellerId, $requestId)) {
+            $success = 'Solicitud de retiro cancelada correctamente.';
+            $balance = sellerBalance($conexion, $sellerId);
+        } else {
+            $error = 'No se pudo cancelar. Solo puedes cancelar retiros pendientes.';
+        }
     } else {
         $balance = sellerBalance($conexion, $sellerId);
         $amount = (float)str_replace(',', '.', (string)($_POST['monto'] ?? '0'));
@@ -198,7 +215,7 @@ $page_title = "Retirar saldo - Vendedor";
     table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}th{color:#9a9a9a;font-size:.84rem;text-transform:uppercase}
     .table-wrap{overflow:auto}.badge{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:900}.badge.ok{background:rgba(52,199,89,.15);color:#34c759}.badge.warn{background:rgba(255,204,0,.14);color:#ffcc00}.badge.bad{background:rgba(255,59,48,.14);color:#ff6b6b}
     @media(max-width:900px){.layout{grid-template-columns:1fr}.actions-row .btn{width:100%}}
-    .voucher-link{display:inline-flex;align-items:center;gap:8px;margin-top:6px;color:#12aaff;text-decoration:none;font-weight:800}.voucher-thumb{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-top:8px}
+    .voucher-link{display:inline-flex;align-items:center;gap:8px;margin-top:6px;color:#12aaff;text-decoration:none;font-weight:800}.voucher-thumb{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-top:8px}.mini-actions{display:flex;gap:8px;flex-wrap:wrap}.btn.danger{background:rgba(255,59,48,.14);color:#ff6b6b;border:1px solid rgba(255,59,48,.35)}
   </style>
 </head>
 <body>
@@ -263,6 +280,7 @@ $page_title = "Retirar saldo - Vendedor";
               <th>Metodo</th>
               <th>Estado</th>
               <th>Voucher</th>
+              <th>Acciones</th>
               <th>Fecha</th>
             </tr>
           </thead>
@@ -277,22 +295,33 @@ $page_title = "Retirar saldo - Vendedor";
                 <?php if (!empty($row['comprobante_url'])): ?>
                   <a class="voucher-link" href="../<?php echo h($row['comprobante_url']); ?>" target="_blank" rel="noopener"><i class="fas fa-receipt"></i> Ver voucher</a>
                   <br><img class="voucher-thumb" src="../<?php echo h($row['comprobante_url']); ?>" alt="Voucher de pago" loading="lazy">
-                <?php elseif ((string)$row['estado'] === 'pendiente'): ?>
-                  <?php $notifyUrl = adminNotifyUrl($adminPhone, $seller, $row); ?>
-                  <?php if ($notifyUrl): ?>
-                    <a class="btn secondary" href="<?php echo h($notifyUrl); ?>" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Notificar admin</a>
-                  <?php else: ?>
-                    <span class="muted">Sin WhatsApp admin</span>
-                  <?php endif; ?>
                 <?php else: ?>
                   <span class="muted">Sin voucher</span>
+                <?php endif; ?>
+              </td>
+              <td>
+                <?php if ((string)$row['estado'] === 'pendiente'): ?>
+                  <div class="mini-actions">
+                    <?php $notifyUrl = adminNotifyUrl($adminPhone, $seller, $row); ?>
+                    <?php if ($notifyUrl): ?>
+                      <a class="btn secondary" href="<?php echo h($notifyUrl); ?>" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Notificar</a>
+                    <?php endif; ?>
+                    <form method="POST" onsubmit="return confirm('¿Cancelar esta solicitud de retiro?');">
+                      <input type="hidden" name="_csrf" value="<?php echo h($csrf); ?>">
+                      <input type="hidden" name="accion" value="cancelar_retiro">
+                      <input type="hidden" name="retiro_id" value="<?php echo (int)$row['id']; ?>">
+                      <button class="btn danger" type="submit"><i class="fas fa-ban"></i> Cancelar</button>
+                    </form>
+                  </div>
+                <?php else: ?>
+                  <span class="muted">Sin acciones</span>
                 <?php endif; ?>
               </td>
               <td><?php echo h(date('d/m/Y H:i', strtotime((string)$row['creado_en']))); ?></td>
             </tr>
           <?php endforeach; ?>
           <?php if (!$history): ?>
-            <tr><td colspan="6" class="muted">Todavia no tienes solicitudes de retiro.</td></tr>
+            <tr><td colspan="7" class="muted">Todavia no tienes solicitudes de retiro.</td></tr>
           <?php endif; ?>
           </tbody>
         </table>

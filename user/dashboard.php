@@ -23,8 +23,8 @@ function colExistsUserDashboard(mysqli $cx, string $table, string $col): bool {
     return ($rs && $rs->num_rows > 0);
 }
 
-// Requiere login
-requireLogin('../login.php'); // o 'login.php' según tu estructura
+// Requiere cuenta de cliente. El admin puede entrar para auditoria.
+requireRole(['cliente', 'admin']);
 
 // Usuario actual (desde auth.php)
 $usuario_actual = getCurrentUser();
