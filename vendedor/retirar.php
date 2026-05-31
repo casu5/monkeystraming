@@ -97,7 +97,7 @@ function adminWhatsapp(mysqli $cx): string {
     return preg_replace('/\D+/', '', (string)($row['whatsapp'] ?? ''));
 }
 function adminNotifyUrl(string $phone, array $seller, array $request): string {
-    $message = "Hola admin, soy " . ($seller['nombre'] ?? 'vendedor') . ". Acabo de solicitar un retiro #" . (int)$request['id'] . " por S/ " . number_format((float)$request['monto'], 2) . ". Metodo: " . ($request['metodo'] ?? '-') . ". Por favor revisalo en el panel admin > Retiros.";
+    $message = "Hola admin, soy " . ($seller['nombre'] ?? 'vendedor') . ". Acabo de solicitar un retiro #" . (int)$request['id'] . " por S/ " . number_format((float)$request['monto'], 2) . ". Metodo: " . ($request['metodo'] ?? '-') . ". Por favor revisalo.";
     return $phone !== '' ? "https://wa.me/" . rawurlencode($phone) . "?text=" . rawurlencode($message) : '';
 }
 
