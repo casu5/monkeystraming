@@ -18,6 +18,40 @@ if (empty($_SESSION['_csrf_cart'])) {
 $csrf_cart = $_SESSION['_csrf_cart'];
 
 function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+function tableExistsCart(mysqli $cx, string $table): bool {
+    $t = $cx->real_escape_string($table);
+    $rs = $cx->query("SHOW TABLES LIKE '$t'");
+    return ($rs && $rs->num_rows > 0);
+}
+function colExistsCart(mysqli $cx, string $table, string $col): bool {
+    $t = $cx->real_escape_string($table);
+    $c = $cx->real_escape_string($col);
+    $rs = $cx->query("SHOW COLUMNS FROM `$t` LIKE '$c'");
+    return ($rs && $rs->num_rows > 0);
+}
+function availableStockForCart(mysqli $cx, int $productId, ?int $sellerId = null): int {
+    if ($productId <= 0 || !tableExistsCart($cx, 'cuentas') || !tableExistsCart($cx, 'cuenta_perfiles')) return 0;
+    $hasSeller = colExistsCart($cx, 'cuentas', 'vendedor_id') && $sellerId;
+    $sellerFilter = $hasSeller ? " AND c.vendedor_id = ? " : "";
+    $st = $cx->prepare("
+        SELECT COUNT(*) c
+        FROM cuenta_perfiles cp
+        INNER JOIN cuentas c ON c.id = cp.cuenta_id
+        WHERE c.producto_id = ?
+          $sellerFilter
+          AND c.estado = 'DISPONIBLE'
+          AND cp.estado = 'DISPONIBLE'
+    ");
+    if ($hasSeller) {
+        $st->bind_param("ii", $productId, $sellerId);
+    } else {
+        $st->bind_param("i", $productId);
+    }
+    $st->execute();
+    $stock = (int)($st->get_result()->fetch_assoc()['c'] ?? 0);
+    $st->close();
+    return $stock;
+}
 
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -38,6 +72,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('carrito.php');
     }
 
+    if ($action === 'set_qty' && $productId > 0) {
+        $qty = max(1, min(99, (int)($_POST['qty'] ?? 1)));
+        if (isset($_SESSION['cart'][$productId])) {
+            $sellerId = isset($_SESSION['cart'][$productId]['vendedor_id']) ? (int)$_SESSION['cart'][$productId]['vendedor_id'] : null;
+            $available = availableStockForCart($conexion, $productId, $sellerId);
+            if ($available <= 0) {
+                $_SESSION['error_msg'] = 'Este producto ya no tiene stock disponible.';
+                redirect('carrito.php');
+            }
+            if ($qty > $available) {
+                $_SESSION['error_msg'] = 'Solo hay ' . $available . ' unidad(es) disponibles para este producto.';
+                redirect('carrito.php');
+            }
+            $_SESSION['cart'][$productId]['qty'] = $qty;
+            $_SESSION['cart'][$productId]['updated_at'] = date('Y-m-d H:i:s');
+            $_SESSION['success_msg'] = 'Cantidad actualizada.';
+        }
+        redirect('carrito.php');
+    }
+
     if ($action === 'clear') {
         $_SESSION['cart'] = [];
         $_SESSION['success_msg'] = 'Carrito vaciado.';
@@ -47,7 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $cart = array_values($_SESSION['cart']);
 $total = 0.0;
+$cartStock = [];
 foreach ($cart as $item) {
+    $pid = (int)($item['id'] ?? 0);
+    $sellerId = isset($item['vendedor_id']) ? (int)$item['vendedor_id'] : null;
+    $cartStock[$pid] = availableStockForCart($conexion, $pid, $sellerId);
     $total += (float)($item['precio'] ?? 0) * max(1, (int)($item['qty'] ?? 1));
 }
 
@@ -74,11 +132,16 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
     .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px}
     .item{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07)}.item:last-child{border-bottom:0}
     .item h3{color:#fff;margin-bottom:6px}.price{font-size:1.15rem;font-weight:900;color:#0de0c9;white-space:nowrap}
+    .qty-form{display:inline-flex;align-items:center;gap:8px;margin-top:10px}.qty-form input{width:74px;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.13);background:rgba(0,0,0,.28);color:#fff;font-weight:800}
     .btn{border:0;border-radius:10px;padding:11px 15px;font-weight:900;text-decoration:none;display:inline-flex;gap:8px;align-items:center;justify-content:center;cursor:pointer}
     .primary{background:linear-gradient(135deg,#12aaff,#0de0c9);color:#0d0f14}.secondary{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12)}.danger{background:rgba(255,59,48,.14);color:#ff6b6b;border:1px solid rgba(255,59,48,.25)}
     .actions{display:flex;gap:10px;flex-wrap:wrap}.summary-row{display:flex;justify-content:space-between;gap:12px;margin:12px 0;color:#ccc}.summary-total{font-size:1.35rem;color:#fff;font-weight:900}
-    .alert{padding:12px;border-radius:12px;margin-bottom:14px}.ok{background:rgba(52,199,89,.14);border:1px solid rgba(52,199,89,.35);color:#34c759}.err{background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.35);color:#ff6b6b}
+    .alert{display:flex;align-items:flex-start;gap:12px;padding:15px 16px;border-radius:14px;margin-bottom:14px;font-weight:800}.alert i{font-size:1.2rem;margin-top:1px}.ok{background:linear-gradient(135deg,rgba(52,199,89,.18),rgba(13,224,201,.08));border:1px solid rgba(52,199,89,.35);color:#a8ffd0}.err{background:linear-gradient(135deg,rgba(255,59,48,.18),rgba(255,172,18,.08));border:1px solid rgba(255,59,48,.35);color:#ffb3b3}
     .empty{text-align:center;padding:54px 18px}.empty i{font-size:3rem;color:#12aaff;margin-bottom:14px}.msg{min-height:22px;margin-top:12px;font-weight:800}
+    .cart-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px)}
+    .cart-modal-box{width:min(460px,100%);border:1px solid rgba(255,255,255,.12);border-radius:18px;background:linear-gradient(135deg,#151821,#0d0f14);box-shadow:0 24px 70px rgba(0,0,0,.55);padding:28px;text-align:center}
+    .cart-modal-icon{width:68px;height:68px;margin:0 auto 16px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#ff4757,#ffac12);color:#fff;font-size:2rem}
+    .cart-modal-box h3{color:#fff;font-size:1.35rem;margin-bottom:9px}.cart-modal-box p{color:#b8b8b8;line-height:1.55;margin-bottom:20px}
     @media(max-width:850px){.grid{grid-template-columns:1fr}.item{grid-template-columns:1fr}.price{white-space:normal}}
   </style>
   <link rel="stylesheet" href="assets/css/header-unificado.css">
@@ -118,8 +181,8 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
     <a class="btn secondary" href="productos.php"><i class="fas fa-arrow-left"></i> Seguir comprando</a>
   </section>
 
-  <?php if ($success_msg): ?><div class="alert ok"><?php echo h($success_msg); ?></div><?php endif; ?>
-  <?php if ($error_msg): ?><div class="alert err"><?php echo h($error_msg); ?></div><?php endif; ?>
+  <?php if ($success_msg): ?><div class="alert ok"><i class="fas fa-check-circle"></i><span><?php echo h($success_msg); ?></span></div><?php endif; ?>
+  <?php if ($error_msg): ?><div class="alert err"><i class="fas fa-triangle-exclamation"></i><span><?php echo h($error_msg); ?></span></div><?php endif; ?>
 
   <?php if (!$cart): ?>
     <section class="card empty">
@@ -136,17 +199,30 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
             $pid = (int)($item['id'] ?? 0);
             $qty = max(1, (int)($item['qty'] ?? 1));
             $price = (float)($item['precio'] ?? 0);
+            $available = max(0, (int)($cartStock[$pid] ?? 0));
           ?>
-          <article class="item" data-product-id="<?php echo $pid; ?>">
+          <article class="item" data-product-id="<?php echo $pid; ?>" data-qty="<?php echo $qty; ?>" data-stock="<?php echo $available; ?>">
             <div>
               <h3><?php echo h($item['nombre'] ?? ('Producto #' . $pid)); ?></h3>
-              <p class="muted">Cantidad: <?php echo $qty; ?><?php echo !empty($item['added_at']) ? ' - Agregado: ' . h(date('d/m/Y H:i', strtotime((string)$item['added_at']))) : ''; ?></p>
+              <p class="muted"><?php echo !empty($item['added_at']) ? 'Agregado: ' . h(date('d/m/Y H:i', strtotime((string)$item['added_at']))) : ''; ?></p>
+              <form method="POST" class="qty-form">
+                <input type="hidden" name="_csrf" value="<?php echo h($csrf_cart); ?>">
+                <input type="hidden" name="action" value="set_qty">
+                <input type="hidden" name="product_id" value="<?php echo $pid; ?>">
+                <label class="muted" for="qty-<?php echo $pid; ?>">Cantidad</label>
+                <input id="qty-<?php echo $pid; ?>" name="qty" type="number" min="1" max="<?php echo max(1, $available); ?>" value="<?php echo $qty; ?>">
+                <button class="btn secondary" type="submit"><i class="fas fa-check"></i></button>
+              </form>
+              <p class="muted" style="margin-top:6px;">Stock disponible: <?php echo $available; ?></p>
+              <?php if ($available > 0 && $qty > $available): ?>
+                <p style="color:#ff6b6b;font-weight:800;margin-top:6px;">La cantidad supera el stock disponible.</p>
+              <?php endif; ?>
               <div class="msg"></div>
             </div>
             <div>
               <div class="price">S/ <?php echo number_format($price * $qty, 2); ?></div>
               <div class="actions" style="margin-top:10px;justify-content:flex-end;">
-                <button class="btn primary js-buy" type="button" data-id="<?php echo $pid; ?>"><i class="fas fa-credit-card"></i> Comprar</button>
+                <button class="btn primary js-buy" type="button" data-id="<?php echo $pid; ?>" <?php echo ($available <= 0 || $qty > $available) ? 'disabled' : ''; ?>><i class="fas fa-credit-card"></i> Comprar</button>
                 <form method="POST">
                   <input type="hidden" name="_csrf" value="<?php echo h($csrf_cart); ?>">
                   <input type="hidden" name="action" value="remove">
@@ -165,7 +241,9 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
         <div class="summary-row"><span>Saldo</span><strong>S/ <?php echo number_format((float)($usuario_actual['saldo'] ?? 0), 2); ?></strong></div>
         <div class="summary-row"><span>Total</span><strong class="summary-total">S/ <?php echo number_format($total, 2); ?></strong></div>
         <p class="muted" style="line-height:1.45;margin:14px 0;">La compra usa tu saldo disponible y entrega las credenciales al instante si hay stock.</p>
-        <form method="POST" onsubmit="return confirm('¿Vaciar todo el carrito?');">
+        <button class="btn primary" id="buyAllBtn" style="width:100%;margin-bottom:10px;" type="button"><i class="fas fa-credit-card"></i> Comprar todo</button>
+        <div class="msg" id="cartMsg"></div>
+        <form method="POST" id="clearCartForm">
           <input type="hidden" name="_csrf" value="<?php echo h($csrf_cart); ?>">
           <input type="hidden" name="action" value="clear">
           <button class="btn secondary" style="width:100%;" type="submit"><i class="fas fa-broom"></i> Vaciar carrito</button>
@@ -179,6 +257,12 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
 async function buyProduct(productId, item) {
   const msg = item.querySelector('.msg');
   const btn = item.querySelector('.js-buy');
+  const qty = Math.max(1, parseInt(item.querySelector('input[name="qty"]')?.value || item.dataset.qty || '1', 10));
+  const stock = Math.max(0, parseInt(item.dataset.stock || '0', 10));
+  if (qty > stock) {
+    showCartNotice('Stock limitado', 'Solo hay ' + stock + ' unidad(es) disponibles para este producto. Ajusta la cantidad para poder continuar.', 'warning');
+    return;
+  }
   const old = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
@@ -186,27 +270,30 @@ async function buyProduct(productId, item) {
   msg.style.color = '#ffb3b3';
 
   try {
-    const body = new URLSearchParams();
-    body.append('action', 'buy');
-    body.append('product_id', String(productId));
-    body.append('_csrf', <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>);
+    for (let i = 0; i < qty; i++) {
+      msg.textContent = 'Comprando unidad ' + (i + 1) + ' de ' + qty + '...';
+      const body = new URLSearchParams();
+      body.append('action', 'buy');
+      body.append('product_id', String(productId));
+      body.append('_csrf', <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>);
 
-    const response = await fetch('comprar.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-      body
-    });
-    const data = await response.json();
+      const response = await fetch('comprar.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+        body
+      });
+      const data = await response.json();
 
-    if (!response.ok || !data.ok) {
-      if (data.redirect) {
-        window.location.href = data.redirect;
+      if (!response.ok || !data.ok) {
+        if (data.redirect) {
+          window.location.href = data.redirect;
+          return;
+        }
+        msg.textContent = data.message || 'No se pudo completar la compra.';
+        btn.disabled = false;
+        btn.innerHTML = old;
         return;
       }
-      msg.textContent = data.message || 'No se pudo completar la compra.';
-      btn.disabled = false;
-      btn.innerHTML = old;
-      return;
     }
 
     msg.style.color = '#34c759';
@@ -225,6 +312,131 @@ document.addEventListener('click', (event) => {
   const item = btn.closest('.item');
   buyProduct(btn.dataset.id, item);
 });
+
+const buyAllBtn = document.getElementById('buyAllBtn');
+if (buyAllBtn) {
+  buyAllBtn.addEventListener('click', async () => {
+    const proceed = await showCartConfirm('Comprar todo el carrito', 'Se procesará el total de S/ <?php echo number_format($total, 2); ?> usando tu saldo disponible.');
+    if (!proceed) return;
+
+    const cartMsg = document.getElementById('cartMsg');
+    const items = Array.from(document.querySelectorAll('.item')).map((item) => ({
+      item,
+      id: item.dataset.productId,
+      qty: Math.max(1, parseInt(item.querySelector('input[name="qty"]')?.value || '1', 10)),
+      stock: Math.max(0, parseInt(item.dataset.stock || '0', 10))
+    }));
+
+    const invalid = items.find((entry) => entry.qty > entry.stock);
+    if (invalid) {
+      showCartNotice('Revisa las cantidades', 'Hay un producto con cantidad mayor al stock disponible. Ajusta la cantidad antes de comprar.', 'warning');
+      return;
+    }
+
+    buyAllBtn.disabled = true;
+    buyAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comprando...';
+    cartMsg.style.color = '#aaa';
+    cartMsg.textContent = 'Procesando carrito...';
+
+    for (const entry of items) {
+      for (let i = 0; i < entry.qty; i++) {
+        const msg = entry.item.querySelector('.msg');
+        msg.style.color = '#aaa';
+        msg.textContent = 'Comprando unidad ' + (i + 1) + ' de ' + entry.qty + '...';
+
+        const body = new URLSearchParams();
+        body.append('action', 'buy');
+        body.append('product_id', String(entry.id));
+        body.append('_csrf', <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>);
+
+        const response = await fetch('comprar.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          cartMsg.style.color = '#ff6b6b';
+          cartMsg.textContent = data.message || 'No se pudo completar todo el carrito.';
+          buyAllBtn.disabled = false;
+          buyAllBtn.innerHTML = '<i class="fas fa-credit-card"></i> Comprar todo';
+          return;
+        }
+      }
+    }
+
+    cartMsg.style.color = '#34c759';
+    cartMsg.textContent = 'Compra total completada. Redirigiendo...';
+    window.location.href = 'user/dashboard.php';
+  });
+}
+
+const clearCartForm = document.getElementById('clearCartForm');
+if (clearCartForm) {
+  clearCartForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const proceed = await showCartConfirm('Vaciar carrito', 'Se quitarán todos los productos guardados en tu carrito.');
+    if (proceed) clearCartForm.submit();
+  });
+}
+
+function showCartNotice(title, message, type = 'warning') {
+  const modal = document.createElement('div');
+  modal.className = 'cart-modal';
+  const icon = type === 'ok' ? 'fa-check-circle' : 'fa-triangle-exclamation';
+  modal.innerHTML = `
+    <div class="cart-modal-box">
+      <div class="cart-modal-icon"><i class="fas ${icon}"></i></div>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(message)}</p>
+      <button class="btn primary" type="button"><i class="fas fa-check"></i> Entendido</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('button').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) modal.remove();
+  });
+}
+
+function showCartConfirm(title, message) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'cart-modal';
+    modal.innerHTML = `
+      <div class="cart-modal-box">
+        <div class="cart-modal-icon"><i class="fas fa-shopping-cart"></i></div>
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(message)}</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn secondary" type="button" data-action="cancel">Cancelar</button>
+          <button class="btn primary" type="button" data-action="ok"><i class="fas fa-credit-card"></i> Aceptar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal || event.target.closest('[data-action="cancel"]')) {
+        modal.remove();
+        resolve(false);
+      }
+      if (event.target.closest('[data-action="ok"]')) {
+        modal.remove();
+        resolve(true);
+      }
+    });
+  });
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
 </script>
 </body>
 </html>

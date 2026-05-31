@@ -883,7 +883,7 @@ $imagenes_predef = [
         .footer-copyright {
             font-size: 0.9rem;
             color: #666;
-            margin-top: 20px;
+            margin-top: 0;
         }
 
         /* === ANIMACIONES DE BÚSQUEDA === */
@@ -1297,48 +1297,6 @@ $imagenes_predef = [
     </section>
 <?php endif; ?>
 
-<!-- ===== TESTIMONIOS ===== -->
-<section class="testimonios">
-    <div class="section-header">
-        <h2><i class="fas fa-comment-dots"></i> Lo que dicen nuestros clientes</h2>
-    </div>
-    
-    <div class="testimonios-grid">
-        <div class="testimonio-card" style="animation-delay: 0.1s;">
-            <p class="testimonio-text">"La mejor plataforma para streaming. Atención inmediata y productos 100% funcionales."</p>
-            <div class="testimonio-author">
-                <div class="author-avatar">CR</div>
-                <div class="author-info">
-                    <h4>Carlos Rodríguez</h4>
-                    <p>Cliente desde 2023</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="testimonio-card" style="animation-delay: 0.2s;">
-            <p class="testimonio-text">"Increíble la variedad de productos. Todo en un solo lugar con soporte en español."</p>
-            <div class="testimonio-author">
-                <div class="author-avatar">AP</div>
-                <div class="author-info">
-                    <h4>Ana Pérez</h4>
-                    <p>Cliente frecuente</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="testimonio-card" style="animation-delay: 0.3s;">
-            <p class="testimonio-text">"Soporte rápido y efectivo. Me resolvieron un problema en menos de 10 minutos."</p>
-            <div class="testimonio-author">
-                <div class="author-avatar">LM</div>
-                <div class="author-info">
-                    <h4>Luis Martínez</h4>
-                    <p>Streamer profesional</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
     <div class="footer-content">
@@ -1350,7 +1308,7 @@ $imagenes_predef = [
             <a href="login.php">Login</a>
             <a href="register.php">Registro</a>
             <a href="recargar.php">Recargar</a>
-            <a href="#">Soporte</a>
+            <a href="user/tickets-usuario.php">Soporte</a>
         </div>
         <div class="footer-copyright">
             © 2024 Monkeystraming. Todos los derechos reservados.<br>

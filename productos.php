@@ -237,6 +237,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
         body{
             background:linear-gradient(135deg,#0d0f14 0%,#11131a 35%,#0b0c11 100%);
             color:#e5e5e5;min-height:100vh;
+            display:flex;flex-direction:column;
         }
         .header {
             position: sticky;
@@ -305,7 +306,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 
         .container{
             display:flex;max-width:1400px;margin:100px auto 50px;
-            padding:0 20px;gap:30px;
+            padding:0 20px;gap:30px;width:100%;flex:1 0 auto;
         }
         .sidebar{
             width:260px;padding:20px;background:rgba(255,255,255,0.03);
@@ -387,9 +388,24 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             grid-column:1/-1;text-align:center;padding:50px 20px;color: #999;
         }
         .footer{
-            text-align:center;padding:25px;background:rgba(11,13,18,0.9);
-            color:#7a7a7a;font-size:.85rem;border-top:1px solid rgba(255,255,255,0.05);
-            margin-top:60px;
+            flex-shrink:0;text-align:center;padding:40px 20px;background:rgba(11,13,18,0.9);
+            color:#7a7a7a;font-size:0;border-top:1px solid rgba(255,255,255,0.05);
+            margin-top:auto;
+        }
+        .footer-content{
+            max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:30px;font-size:.9rem;
+        }
+        .footer-links{
+            display:flex;justify-content:center;gap:30px;flex-wrap:wrap;
+        }
+        .footer-links a{
+            color:#aaa;text-decoration:none;transition:color .3s ease;
+        }
+        .footer-links a:hover{
+            color:#12aaff;
+        }
+        .footer-copyright{
+            color:#666;line-height:1.3;
         }
         @media(max-width:1024px){
             .container{flex-direction:column;}
@@ -545,6 +561,20 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 </div>
 
 <footer class="footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="index.php">Inicio</a>
+            <a href="productos.php">Productos</a>
+            <a href="login.php">Login</a>
+            <a href="register.php">Registro</a>
+            <a href="recargar.php">Recargar</a>
+            <a href="user/tickets-usuario.php">Soporte</a>
+        </div>
+        <div class="footer-copyright">
+            © 2024 Monkeystraming. Todos los derechos reservados.<br>
+            Streaming de calidad para todos.
+        </div>
+    </div>
     © 2024 Monkeystraming. Todos los derechos reservados.
 </footer>
 

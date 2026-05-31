@@ -95,13 +95,44 @@ try {
             $_SESSION['cart'] = [];
         }
 
+        $sellerFilterCart = ($cuentasHasVendedor && $vendedorId) ? " AND c.vendedor_id = ? " : "";
+        $stmtStockCart = $conexion->prepare("
+            SELECT COUNT(*) c
+            FROM cuenta_perfiles cp
+            JOIN cuentas c ON c.id = cp.cuenta_id
+            WHERE c.producto_id = ?
+              $sellerFilterCart
+              AND c.estado = 'DISPONIBLE'
+              AND cp.estado = 'DISPONIBLE'
+        ");
+        if ($cuentasHasVendedor && $vendedorId) {
+            $stmtStockCart->bind_param("ii", $product_id, $vendedorId);
+        } else {
+            $stmtStockCart->bind_param("i", $product_id);
+        }
+        $stmtStockCart->execute();
+        $availableForCart = (int)($stmtStockCart->get_result()->fetch_assoc()['c'] ?? 0);
+        $stmtStockCart->close();
+
+        $currentQty = isset($_SESSION['cart'][$product_id]) ? max(1, (int)($_SESSION['cart'][$product_id]['qty'] ?? 1)) : 0;
+        $nextQty = $currentQty + 1;
+        if ($availableForCart <= 0 || $nextQty > $availableForCart) {
+            respond([
+                'ok' => false,
+                'code' => 'SIN_STOCK',
+                'message' => $currentQty > 0 ? 'No hay mas stock disponible para agregar otra unidad.' : 'Este producto no tiene stock disponible.',
+                'cart_count' => function_exists('cartCount') ? cartCount() : 0,
+            ], 409);
+        }
+
         $_SESSION['cart'][$product_id] = [
             'id' => $product_id,
             'nombre' => $nombreProducto,
             'precio' => $precio,
             'vendedor_id' => $vendedorId,
-            'qty' => 1,
-            'added_at' => date('Y-m-d H:i:s'),
+            'qty' => $nextQty,
+            'added_at' => $_SESSION['cart'][$product_id]['added_at'] ?? date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         $cartCount = 0;
@@ -111,8 +142,9 @@ try {
 
         respond([
             'ok' => true,
-            'message' => 'Producto anadido al carrito.',
+            'message' => $nextQty > 1 ? 'Cantidad actualizada en el carrito.' : 'Producto anadido al carrito.',
             'cart_count' => $cartCount,
+            'qty' => $nextQty,
         ]);
     }
 
