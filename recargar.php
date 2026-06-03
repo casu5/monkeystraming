@@ -588,6 +588,34 @@ $recargas_recientes = $recargas_stmt->get_result();
             color: #0de0c9;
         }
 
+        .bonus-callout {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 12px 0 10px;
+            padding: 12px;
+            border: 1px solid rgba(13,224,201,0.28);
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(13,224,201,0.12), rgba(18,170,255,0.08));
+            color: #dffdf9;
+        }
+
+        .bonus-callout i {
+            color: #0de0c9;
+            margin-top: 2px;
+        }
+
+        .bonus-callout strong {
+            color: #0de0c9;
+        }
+
+        .bonus-callout small {
+            display: block;
+            margin-top: 3px;
+            color: #9fb8b6;
+            line-height: 1.35;
+        }
+
         /* === COMPROBANTE === */
         .upload-title {
             font-size: 1.1rem;
@@ -1013,7 +1041,7 @@ $recargas_recientes = $recargas_stmt->get_result();
                     <h3 class="resumen-title">Resumen de la recarga</h3>
                     <div class="resumen-items">
                         <div class="resumen-row">
-                            <span>Monto ingresado:</span>
+                            <span>Monto que pagas:</span>
                             <span id="resumenMonto">S/ 0.00</span>
                         </div>
                         <div class="resumen-row">
@@ -1021,11 +1049,18 @@ $recargas_recientes = $recargas_stmt->get_result();
                             <span id="resumenComision">S/ 0.00</span>
                         </div>
                         <div class="resumen-row">
-                            <span>Bonus (>= S/ 100):</span>
+                            <span>Bono promocional 5%:</span>
                             <span id="resumenBonus">S/ 0.00</span>
                         </div>
+                        <div class="bonus-callout" id="bonusCallout">
+                            <i class="fas fa-gift"></i>
+                            <div>
+                                <strong id="bonusCalloutTitle">Bono activado</strong>
+                                <small id="bonusCalloutText">Por recargar desde S/ 100 recibes saldo extra.</small>
+                            </div>
+                        </div>
                         <div class="resumen-row total">
-                            <span>Total a recibir:</span>
+                            <span>Saldo que se acreditara:</span>
                             <span id="resumenTotal">S/ 0.00</span>
                         </div>
                     </div>
@@ -1206,6 +1241,22 @@ function actualizarResumen() {
         document.getElementById('resumenComision').textContent = `S/ ${comision.toFixed(2)}`;
         document.getElementById('resumenBonus').textContent    = `S/ ${bonus.toFixed(2)}`;
         document.getElementById('resumenTotal').textContent    = `S/ ${total.toFixed(2)}`;
+
+        const bonusCallout = document.getElementById('bonusCallout');
+        const bonusTitle = document.getElementById('bonusCalloutTitle');
+        const bonusText = document.getElementById('bonusCalloutText');
+        if (bonusCallout && bonusTitle && bonusText) {
+            if (bonus > 0) {
+                bonusTitle.textContent = `Bono activado: S/ ${bonus.toFixed(2)} extra`;
+                bonusText.textContent = `Tu recarga supera S/ 100, por eso agregamos 5% adicional a tu saldo aprobado.`;
+                bonusCallout.style.display = 'flex';
+            } else {
+                const faltante = Math.max(0, 100 - monto);
+                bonusTitle.textContent = 'Bono disponible desde S/ 100';
+                bonusText.textContent = `Agrega S/ ${faltante.toFixed(2)} mas para activar 5% adicional de saldo.`;
+                bonusCallout.style.display = 'flex';
+            }
+        }
 
         resumen.style.display = 'block';
     } else {

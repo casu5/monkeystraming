@@ -64,6 +64,7 @@
     align-items: center !important;
     gap: 7px !important;
     padding: 6px 0 !important;
+    white-space: nowrap !important;
     transition: color .2s ease, transform .2s ease !important;
 }
 
@@ -101,10 +102,13 @@
 
 .header .btn-registro {
     padding: 10px 18px !important;
+    min-width: 132px !important;
     border-radius: 10px !important;
     background: linear-gradient(135deg,#12aaff,#0de0c9) !important;
     color: #0d0f14 !important;
     font-weight: 800 !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
     box-shadow: 0 4px 15px rgba(18,170,255,0.25) !important;
 }
 

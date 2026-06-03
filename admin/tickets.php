@@ -255,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 // Insertar mensaje automático
                                 $sqlAutoInsert = "INSERT INTO `$TABLE_TICKET_MSGS` (`$TM_TID`, `$TM_ROLE`, `$TM_SID`, `$TM_MSG`, `$TM_CA`) 
-                                                  VALUES (?, 'SYSTEM', 0, ?, NOW())";
+                                                  VALUES (?, 'ADMIN', 0, ?, NOW())";
                                 $stAuto = $conexion->prepare($sqlAutoInsert);
                                 $stAuto->bind_param("is", $postId, $mensaje_auto);
                                 $stAuto->execute();
@@ -350,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             );
                             
                             $sqlAutoInsert = "INSERT INTO `$TABLE_TICKET_MSGS` (`$TM_TID`, `$TM_ROLE`, `$TM_SID`, `$TM_MSG`, `$TM_CA`) 
-                                              VALUES (?, 'SYSTEM', 0, ?, NOW())";
+                                              VALUES (?, 'ADMIN', 0, ?, NOW())";
                             $stAuto = $conexion->prepare($sqlAutoInsert);
                             $stAuto->bind_param("is", $postId, $mensaje_auto);
                             $stAuto->execute();

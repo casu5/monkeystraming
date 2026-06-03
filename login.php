@@ -602,7 +602,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
         </div>
 
-        <?php if (!empty($producto_redirect)): ?>
+        <?php if (false && !empty($producto_redirect)): ?>
         <div class="product-info">
             <i class="fas fa-info-circle"></i>
             Inicia sesión para comprar: 
@@ -676,7 +676,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="index.php" style="margin-top: 10px; display: inline-block;">
                     <i class="fas fa-home"></i> Volver al inicio
                 </a>
-                <a href="admin/login.php">Panel Admin</a>
             </div>
         </form>
     </div>

@@ -14,7 +14,7 @@ $solicitud_id = '';
 $nombre_usuario = '';
 
 // WhatsApp del admin
-$ADMIN_WHATSAPP = '51964279873';
+$ADMIN_WHATSAPP = '51982416252';
 
 if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
     header('Location: index.php');

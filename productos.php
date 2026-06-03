@@ -424,7 +424,18 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             .producto-card button{width:100%;}
         }
     </style>
-    <link rel="stylesheet" href="assets/css/header-unificado.css">
+    <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260601">
+    <style>
+        .header .nav .btn-registro {
+            min-width: 140px !important;
+            
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            border-radius: 10px !important;
+        }
+    </style>
 </head>
 <body>
 

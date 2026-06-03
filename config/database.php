@@ -6,6 +6,20 @@
 
 declare(strict_types=1);
 
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool
+    {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool
+    {
+        return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
 // Zona horaria (ajústala si deseas)
 date_default_timezone_set('America/Lima');
 
@@ -36,8 +50,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $db_config = [
     'host'   => getenv('DB_HOST') ?: 'localhost',
-    'user'   => getenv('DB_USER') ?: 'root',
-    'pass'   => getenv('DB_PASS') ?: '',
+    'user'   => getenv('DB_USER') ?: 'monkey',
+    'pass'   => getenv('DB_PASS') ?: 'LuisTuPapy*25',
     'name'   => getenv('DB_NAME') ?: 'monkeystraming_2',
     'port'   => (int)(getenv('DB_PORT') ?: 3306),
     'charset'=> getenv('DB_CHARSET') ?: 'utf8mb4',
@@ -177,7 +191,8 @@ function appBasePath(): string
 
     if ($docRoot !== '' && str_starts_with($projectRoot, $docRoot)) {
         $base = substr($projectRoot, strlen($docRoot));
-        return '/' . trim($base, '/');
+        $base = trim($base, '/');
+        return $base === '' ? '' : '/' . $base;
     }
 
     return '';

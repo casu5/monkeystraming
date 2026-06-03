@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $sqlAuto = "INSERT INTO `$T_MSGS` 
                                 (`$C_M_TID`, `$C_M_ROLE`, `$C_M_SID`, `$C_M_MSG`, `$C_M_CA`) 
-                                VALUES (?, 'SYSTEM', 0, ?, NOW())";
+                                VALUES (?, 'ADMIN', 0, ?, NOW())";
                     $stAuto = $conexion->prepare($sqlAuto);
                     $stAuto->bind_param("is", $ticket_id, $mensaje_auto);
                     $stAuto->execute();
