@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/auth.php';
 
 $page_title = "Iniciar sesión - Monkeystraming";
 
-// ✅ Si ya está logueado, redirigir según rol
+// OK Si ya está logueado, redirigir según rol
 if (isLoggedIn()) {
     $role = normalizeUserRole($_SESSION['user_role'] ?? '');
     if ($role === 'admin') {
@@ -97,12 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user = $result->fetch_assoc()) {
 
                 if (!in_array(strtolower((string)($user['estado'] ?? 'activo')), ['activo', 'active', '1', ''], true)) {
-                    $error_msg = "Correo o contraseÃ±a incorrectos.";
+                    $error_msg = "Correo o contraseña incorrectos.";
                 } elseif (password_verify($password, $user['password'])) {
                     $role = normalizeUserRole($user['role'] ?? 'cliente');
                     $safeRedirect = safeLoginRedirect($producto_redirect);
 
-                    // ✅ Sesión normal (USER/ADMIN)
+                    // OK Sesión normal (USER/ADMIN)
                     session_regenerate_id(true);
                     $_SESSION['user_id']    = $user['id'];
                     $_SESSION['user_name']  = $user['nombre'];
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_role']  = $role;
                     $_SESSION['user_saldo'] = $user['saldo'];
 
-                    // ✅ Compatibilidad: si es admin, también setear sesión admin
+                    // OK Compatibilidad: si es admin, también setear sesión admin
                     if ($role === 'admin') {
                         $_SESSION['admin_id']    = $user['id'];
                         $_SESSION['admin_email'] = $user['email'];
@@ -588,6 +588,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
     <link rel="stylesheet" href="assets/css/auth-responsive.css">
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 

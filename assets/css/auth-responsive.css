@@ -354,6 +354,63 @@ body:has(#registerForm) .loading {
     .terms-group {
         padding: 15px !important;
     }
+
+    .card {
+        padding: 24px 18px !important;
+        border-radius: 16px !important;
+    }
+
+    .input-with-example {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .prefix {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .links {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    .links a {
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    .input-group,
+    .form-group {
+        margin-bottom: 16px !important;
+    }
+
+    .input-group input,
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        min-height: 46px !important;
+        font-size: 16px !important;
+    }
+
+    .auth-btn,
+    button[type="submit"],
+    input[type="submit"] {
+        min-height: 46px !important;
+        width: 100% !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        line-height: 1.15 !important;
+    }
+
+    .auth-link,
+    .forgot-password,
+    .home-btn {
+        min-height: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
 }
 
 @media (max-width: 380px) {

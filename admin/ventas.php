@@ -1,5 +1,5 @@
 <?php
-// admin/ventas.php â€” Listar compras/ventas (completadas) con joins a usuario y producto
+// admin/ventas.php - Listar compras/ventas (completadas) con joins a usuario y producto
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -9,8 +9,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
- * âœ… ProtecciÃ³n ADMIN (compat)
- * - Si existe sesiÃ³n admin_id (admin/login.php), lo usa
+ * OK Protección ADMIN (compat)
+ * - Si existe sesión admin_id (admin/login.php), lo usa
  * - Si no, cae a requireAdmin() / role=admin por isLoggedIn()
  */
 $admin = [
@@ -34,7 +34,7 @@ if (empty($_SESSION['admin_id'])) {
     } else {
         if (!function_exists('isLoggedIn') || !function_exists('getCurrentUser')) {
             http_response_code(500);
-            die('Faltan helpers de sesiÃ³n (isLoggedIn/getCurrentUser).');
+            die('Faltan helpers de sesión (isLoggedIn/getCurrentUser).');
         }
         if (!isLoggedIn()) {
             // OJO: si tu login admin es admin/login.php, usa esta:
@@ -80,13 +80,13 @@ function pickDateColumn(mysqli $cx, string $table, array $candidates): ?string {
 function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function fmoney($n): string { return number_format((float)$n, 2); }
 
-/** ===== Para activar el menÃº automÃ¡ticamente ===== */
+/** ===== Para activar el menú automáticamente ===== */
 $currentPage = basename($_SERVER['PHP_SELF']);
 function navActive(string $file, string $currentPage): string {
     return $currentPage === $file ? 'active' : '';
 }
 
-/** ===== Mini estadÃ­sticas para badges del menÃº (opcional, pero queda pro) ===== */
+/** ===== Mini estadísticas para badges del menú (opcional, pero queda pro) ===== */
 $estadisticas = [
     'usuarios_nuevos_hoy' => 0,
     'productos_agotados'  => 0,
@@ -139,7 +139,7 @@ $C_SELLER = pickCol($conexion, $TABLE_SALES, ['vendedor_id', 'seller_id'], null)
 $C_ADMIN_FEE = pickCol($conexion, $TABLE_SALES, ['comision_admin', 'admin_fee'], null);
 $C_SELLER_AMOUNT = pickCol($conexion, $TABLE_SALES, ['monto_vendedor', 'seller_amount'], null);
 
-// âœ… NUEVA: Detectar columna de fecha de vencimiento
+// OK NUEVA: Detectar columna de fecha de vencimiento
 $C_VENCIMIENTO = pickCol($conexion, $TABLE_SALES, ['fecha_vencimiento', 'vencimiento_at', 'expires_at', 'vence_at'], null);
 
 $isCents = (stripos($C_AMT, 'cents') !== false);
@@ -222,7 +222,7 @@ $selectCols = [
 ];
 if ($C_STATE) $selectCols[] = "c.`$C_STATE` AS estado";
 if ($C_DATE)  $selectCols[] = "c.`$C_DATE` AS fecha";
-// âœ… AGREGAR COLUMNA DE VENCIMIENTO SI EXISTE
+// OK AGREGAR COLUMNA DE VENCIMIENTO SI EXISTE
 if ($C_VENCIMIENTO) $selectCols[] = "c.`$C_VENCIMIENTO` AS fecha_vencimiento";
 if ($TABLE_USERS && $U_ID)   $selectCols[] = "c.`$C_UID` AS usuario_id";
 if ($TABLE_PRODS && $P_ID)   $selectCols[] = "c.`$C_PID` AS producto_id";
@@ -272,7 +272,7 @@ if ($types !== '') $st->bind_param($types, ...$params);
 $st->execute();
 $rs = $st->get_result();
 
-/** ===== Totales rÃ¡pidos (segÃºn filtro) ===== */
+/** ===== Totales rápidos (según filtro) ===== */
 $sumSql = "SELECT COALESCE(SUM(c.`$C_AMT`),0) s FROM `$TABLE_SALES` c
 $joinSql
 WHERE $where";
@@ -412,7 +412,7 @@ $adminEmail = $admin['email'] ?? '';
             .search-bar{display:none;}
         }
 
-        /* ===== Estilos especÃ­ficos Ventas ===== */
+        /* ===== Estilos específicos Ventas ===== */
         .btn{
             border:none;cursor:pointer;border-radius:12px;padding:10px 14px;font-weight:800;
             background:linear-gradient(135deg,#12aaff,#0de0c9);color:#0d0f14;text-decoration:none;display:inline-flex;gap:8px;align-items:center
@@ -447,6 +447,7 @@ $adminEmail = $admin['email'] ?? '';
         .pager a{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.06);color:#fff;text-decoration:none}
         .pager .current{color:#12aaff;font-weight:900}
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -456,11 +457,11 @@ $adminEmail = $admin['email'] ?? '';
     <header class="admin-header">
         <div class="header-title">
             <h1>Ventas</h1>
-            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " â€” " . h($adminEmail) : ""; ?></p>
+            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " - " . h($adminEmail) : ""; ?></p>
         </div>
 
         <div class="header-actions">
-            <input type="text" class="search-bar" placeholder="ðŸ” Buscar en el sistema..." disabled>
+            <input type="text" class="search-bar" placeholder="🔍 Buscar en el sistema..." disabled>
             <div class="user-menu">
                 <div class="user-avatar"><i class="fas fa-user-cog"></i></div>
                 <div class="user-info">
@@ -524,7 +525,7 @@ $adminEmail = $admin['email'] ?? '';
                         <div class="v"><?php echo number_format($total); ?></div>
                     </div>
                     <div class="metaBox">
-                        <div class="k">Suma (segÃºn filtro)</div>
+                        <div class="k">Suma (según filtro)</div>
                         <div class="v">S/ <?php echo fmoney($sumShow); ?></div>
                     </div>
                     <?php if ($sellerSumShow !== null): ?>
@@ -540,7 +541,7 @@ $adminEmail = $admin['email'] ?? '';
                     </div>
                     <?php endif; ?>
                 </div>
-                <div class="muted">PÃ¡gina <?php echo $page; ?> / <?php echo $totalPages; ?></div>
+                <div class="muted">Página <?php echo $page; ?> / <?php echo $totalPages; ?></div>
             </div>
 
             <div style="overflow:auto;">
@@ -584,28 +585,28 @@ $adminEmail = $admin['email'] ?? '';
                                 $sellerMail = $v['vendedor_email'] ?? '';
                                 $pName = $v['producto_nombre'] ?? ('Producto #' . (int)($v['producto_id'] ?? 0));
 
-                                $fechaTxt = 'â€”';
+                                $fechaTxt = '-';
                                 if ($C_DATE && !empty($v['fecha'])) {
                                     $fechaTxt = date('d/m/Y H:i', strtotime($v['fecha']));
                                 }
                                 
-                                // âœ… Mostrar fecha de vencimiento con colores segÃºn estado
-                                $vencimientoTxt = 'â€”';
+                                // OK Mostrar fecha de vencimiento con colores según estado
+                                $vencimientoTxt = '-';
                                 $vencimientoClass = '';
                                 if ($C_VENCIMIENTO && !empty($v['fecha_vencimiento'])) {
                                     $vencimientoTxt = date('d/m/Y H:i', strtotime($v['fecha_vencimiento']));
                                     $hoy = time();
                                     $vencimiento = strtotime($v['fecha_vencimiento']);
                                     
-                                    // Si ya venciÃ³
+                                    // Si ya venció
                                     if ($vencimiento < $hoy) {
                                         $vencimientoClass = 'vencido';
-                                        $vencimientoTxt .= ' âš ï¸';
+                                        $vencimientoTxt .= ' !';
                                     } 
-                                    // Si vence en menos de 3 dÃ­as
+                                    // Si vence en menos de 3 días
                                     elseif (($vencimiento - $hoy) < (3 * 86400)) {
                                         $vencimientoClass = 'proximo';
-                                        $vencimientoTxt .= ' â³';
+                                        $vencimientoTxt .= ' ';
                                     }
                                 }
                             ?>
@@ -633,7 +634,7 @@ $adminEmail = $admin['email'] ?? '';
                                     <?php if ($C_STATE): ?>
                                         <span class="badge <?php echo $badge; ?>"><?php echo h($estado); ?></span>
                                     <?php else: ?>
-                                        <span class="muted">â€”</span>
+                                        <span class="muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo h($fechaTxt); ?></td>
@@ -667,7 +668,7 @@ $adminEmail = $admin['email'] ?? '';
                 $next = min($totalPages, $page + 1);
                 ?>
                 <a href="ventas.php?<?php echo $queryBase; ?>&page=<?php echo $prev; ?>"><i class="fas fa-chevron-left"></i></a>
-                <span class="current">PÃ¡gina <?php echo $page; ?> / <?php echo $totalPages; ?></span>
+                <span class="current">Página <?php echo $page; ?> / <?php echo $totalPages; ?></span>
                 <a href="ventas.php?<?php echo $queryBase; ?>&page=<?php echo $next; ?>"><i class="fas fa-chevron-right"></i></a>
             </div>
         </div>

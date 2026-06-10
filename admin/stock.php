@@ -1,5 +1,5 @@
 <?php
-// admin/stock.php â€” GestiÃ³n de Stock (cuentas/perfiles) con layout del panel
+// admin/stock.php - Gestión de Stock (cuentas/perfiles) con layout del panel
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -33,7 +33,7 @@ function navActive(string $file, string $currentPage): string {
     return $currentPage === $file ? 'active' : '';
 }
 
-/** ===== ProtecciÃ³n admin (hard) ===== */
+/** ===== Protección admin (hard) ===== */
 function requireAdminHard(): void {
     if (function_exists('requireAdmin')) {
         requireAdmin();
@@ -41,7 +41,7 @@ function requireAdminHard(): void {
     }
     if (!function_exists('isLoggedIn') || !function_exists('getCurrentUser')) {
         http_response_code(500);
-        die('Faltan helpers de sesiÃ³n (isLoggedIn/getCurrentUser).');
+        die('Faltan helpers de sesión (isLoggedIn/getCurrentUser).');
     }
     if (!isLoggedIn()) {
         header('Location: ../login.php');
@@ -75,7 +75,7 @@ if (empty($_SESSION['admin_id']) && function_exists('getCurrentUser')) {
 $adminName  = $admin['nombre'] ?? 'Administrador';
 $adminEmail = $admin['email'] ?? '';
 
-/** ===== EstadÃ­sticas para badges del menÃº ===== */
+/** ===== Estadísticas para badges del menú ===== */
 $estadisticas = [
     'usuarios_nuevos_hoy' => 0,
     'productos_agotados'  => 0,
@@ -104,7 +104,7 @@ if (tableExists($conexion, 'tickets') && colExists($conexion, 'tickets', 'estado
     if ($rs) $estadisticas['tickets_soporte'] = (int)($rs->fetch_assoc()['c'] ?? 0);
 }
 
-/** ===== LÃ³gica Stock ===== */
+/** ===== Lógica Stock ===== */
 $success = '';
 $error   = '';
 
@@ -126,7 +126,7 @@ function obtenerTipoVentaProducto(mysqli $cx, int $productoId): ?string {
 }
 
 function recalcularStockProducto(mysqli $cx, int $productoId, string $modoVenta): void {
-    // Actualiza productos.stock segÃºn stock real
+    // Actualiza productos.stock según stock real
     if (!tableExists($cx, 'productos') || !colExists($cx, 'productos', 'stock')) return;
 
     $stock = 0;
@@ -183,16 +183,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
     if (!hash_equals($csrfAdminStock, (string)($_POST['_csrf'] ?? ''))) {
         $error = "Token invalido. Recarga la pagina e intenta nuevamente.";
     } elseif ($productoId <= 0 || $loginUser === '' || $loginPass === '') {
-        $error = "Completa producto, usuario/correo y contraseÃ±a.";
+        $error = "Completa producto, usuario/correo y contraseña.";
     } else {
 
         // Tipo_venta oficial del producto (si existe)
         $tipoVentaProducto = obtenerTipoVentaProducto($conexion, $productoId);
         if (!$tipoVentaProducto) {
-            $error = "Producto invÃ¡lido o no encontrado.";
+            $error = "Producto inválido o no encontrado.";
         } else {
             // Para evitar inconsistencias: por defecto lo alineamos al producto
-            // Si quieres que el admin pueda forzar distinto, cambia esta lÃ­nea a: $modoVenta = $modoVentaPost;
+            // Si quieres que el admin pueda forzar distinto, cambia esta línea a: $modoVenta = $modoVentaPost;
             $modoVenta = strtoupper($tipoVentaProducto) === 'CUENTA_COMPLETA' ? 'CUENTA_COMPLETA' : 'PERFIL';
             $productoVendedorId = null;
             if ($cuentasTieneVendedor && colExists($conexion, 'productos', 'vendedor_id')) {
@@ -265,9 +265,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_a
                 $conexion->commit();
 
                 if ($modoVenta === 'CUENTA_COMPLETA') {
-                    $success = "Stock agregado âœ… (Cuenta completa #$cuentaId).";
+                    $success = "Stock agregado OK (Cuenta completa #$cuentaId).";
                 } else {
-                    $success = "Stock agregado âœ… (Cuenta #$cuentaId con $maxPerfiles perfiles).";
+                    $success = "Stock agregado OK (Cuenta #$cuentaId con $maxPerfiles perfiles).";
                 }
 
             } catch (Throwable $e) {
@@ -453,6 +453,7 @@ $page_title = "Stock - Admin - Monkeystraming";
       background:rgba(18,170,255,0.12);color:#12aaff;border:1px solid rgba(18,170,255,0.25)
     }
   </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -462,11 +463,11 @@ $page_title = "Stock - Admin - Monkeystraming";
   <header class="admin-header">
     <div class="header-title">
       <h1>Stock</h1>
-      <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " â€” " . h($adminEmail) : ""; ?></p>
+      <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " - " . h($adminEmail) : ""; ?></p>
     </div>
 
     <div class="header-actions">
-      <input type="text" class="search-bar" placeholder="ðŸ” Buscar en el sistema..." disabled>
+      <input type="text" class="search-bar" placeholder="🔍 Buscar en el sistema..." disabled>
       <div class="user-menu">
         <div class="user-avatar"><i class="fas fa-user-cog"></i></div>
         <div class="user-info">
@@ -505,7 +506,7 @@ $page_title = "Stock - Admin - Monkeystraming";
                   data-tipo-venta="<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?>"
                 >
                   #<?php echo (int)$p['id']; ?> - <?php echo h($p['nombre']); ?>
-                  (<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?> / <?php echo (int)($p['duracion_dias'] ?? 30); ?> dÃ­as)
+                  (<?php echo h($p['tipo_venta'] ?? 'PERFIL'); ?> / <?php echo (int)($p['duracion_dias'] ?? 30); ?> días)
                 </option>
               <?php endforeach; ?>
             </select>
@@ -518,7 +519,7 @@ $page_title = "Stock - Admin - Monkeystraming";
               <option value="CUENTA_COMPLETA">CUENTA_COMPLETA (vende cuenta)</option>
             </select>
             <small class="muted">
-              Nota: estÃ¡ alineado al tipo_venta del producto (recomendado para que el stock se cuente bien).
+              Nota: está alineado al tipo_venta del producto (recomendado para que el stock se cuente bien).
             </small>
           </div>
         </div>
@@ -529,14 +530,14 @@ $page_title = "Stock - Admin - Monkeystraming";
             <input type="text" name="login_user" placeholder="correo@dominio.com" required>
           </div>
           <div>
-            <label>ContraseÃ±a</label>
+            <label>Contraseña</label>
             <input type="text" name="login_pass" placeholder="********" required>
           </div>
         </div>
 
         <div class="row" style="margin-top:12px">
           <div id="wrapMaxPerfiles">
-            <label>MÃ¡x perfiles</label>
+            <label>Máx perfiles</label>
             <input type="number" name="max_perfiles" id="maxPerfiles" value="4" min="1">
             <small class="muted">Solo aplica cuando el tipo es PERFIL.</small>
           </div>
@@ -556,7 +557,7 @@ $page_title = "Stock - Admin - Monkeystraming";
     </div>
 
     <div class="card">
-      <h3><i class="fas fa-list"></i> Ãšltimas cuentas</h3>
+      <h3><i class="fas fa-list"></i> Últimas cuentas</h3>
 
       <div style="overflow:auto;">
         <table>
@@ -605,7 +606,7 @@ $page_title = "Stock - Admin - Monkeystraming";
             <?php endforeach; ?>
 
             <?php if (empty($cuentas)): ?>
-              <tr><td colspan="7" class="muted" style="padding:14px;">AÃºn no hay stock.</td></tr>
+              <tr><td colspan="7" class="muted" style="padding:14px;">Aún no hay stock.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -632,7 +633,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Auto-ajuste del tipo segÃºn el producto seleccionado
+// Auto-ajuste del tipo según el producto seleccionado
 const productoSelect = document.getElementById('productoSelect');
 const modoVenta = document.getElementById('modoVenta');
 const wrapMax = document.getElementById('wrapMaxPerfiles');

@@ -1,5 +1,5 @@
 <?php
-// admin/index.php — Dashboard REAL (sin demo)
+// admin/index.php - Dashboard REAL (sin demo)
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 
@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
- * ✅ Protección ADMIN (sin depender de getCurrentUser)
+ * OK Protección ADMIN (sin depender de getCurrentUser)
  * Tu admin/login.php guarda: admin_id, admin_email, admin_name, admin_table
  */
 if (empty($_SESSION['admin_id'])) {
@@ -413,6 +413,7 @@ $adminEmail = $admin['email'] ?? '';
         }
         .muted{color:#777;font-size:.9rem}
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -422,7 +423,7 @@ $adminEmail = $admin['email'] ?? '';
     <header class="admin-header">
         <div class="header-title">
             <h1>Dashboard</h1>
-            <p>Bienvenido, <?php echo htmlspecialchars($adminName); ?><?php echo $adminEmail ? " — " . htmlspecialchars($adminEmail) : ""; ?></p>
+            <p>Bienvenido, <?php echo htmlspecialchars($adminName); ?><?php echo $adminEmail ? " - " . htmlspecialchars($adminEmail) : ""; ?></p>
         </div>
 
         <div class="header-actions">

@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     // Insertar mensaje automático del sistema
-                    $mensaje_auto = "✅ Ticket #$ticket_id creado exitosamente. Hola " . h($usuario['nombre']) . ", nos comunicaremos contigo por WhatsApp (" . h($user_whatsapp) . ") en las próximas 24 horas. Por favor, mantén tu WhatsApp disponible.";
+                    $mensaje_auto = "OK Ticket #$ticket_id creado exitosamente. Hola " . h($usuario['nombre']) . ", nos comunicaremos contigo por WhatsApp (" . h($user_whatsapp) . ") en las próximas 24 horas. Por favor, mantén tu WhatsApp disponible.";
                     
                     $sqlAuto = "INSERT INTO `$T_MSGS` 
                                 (`$C_M_TID`, `$C_M_ROLE`, `$C_M_SID`, `$C_M_MSG`, `$C_M_CA`) 
@@ -368,6 +368,7 @@ textarea{min-height:120px;resize:vertical}
     flex-wrap: wrap;
 }
 </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 <?php
@@ -519,7 +520,7 @@ textarea{min-height:120px;resize:vertical}
       ?>
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;">
         <div>
-          <div style="font-size:1.1rem;font-weight:900;color:#fff;">Ticket #<?php echo $tid; ?> — <?php echo h($asunto); ?></div>
+          <div style="font-size:1.1rem;font-weight:900;color:#fff;">Ticket #<?php echo $tid; ?> - <?php echo h($asunto); ?></div>
           <div class="muted">
             Estado: <strong><?php echo h(str_replace('_',' ', $estado)); ?></strong> · 
             Prioridad: <strong><?php echo h($pri); ?></strong>
@@ -541,7 +542,7 @@ textarea{min-height:120px;resize:vertical}
           $role = (string)($m[$C_M_ROLE] ?? 'USER');
           $cls = ($role === 'ADMIN') ? 'admin' : ($role === 'SYSTEM' ? 'system' : 'user');
           $when = $C_M_CA ? (string)($m[$C_M_CA] ?? '') : '';
-          $whenFmt = $when ? date('d/m/Y H:i', strtotime($when)) : '—';
+          $whenFmt = $when ? date('d/m/Y H:i', strtotime($when)) : '-';
           
           if ($role === 'SYSTEM') {
             $sender = 'Sistema';

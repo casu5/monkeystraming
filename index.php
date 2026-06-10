@@ -1054,6 +1054,8 @@ $imagenes_predef = [
         }
     </style>
     <link rel="stylesheet" href="assets/css/header-unificado.css">
+    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -1062,7 +1064,10 @@ $imagenes_predef = [
         <!-- REEMPLAZA LA URL CON LA RUTA DE TU IMAGEN DE LOGO -->
         <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
     </div>
-    
+    <button type="button" class="mobile-nav-toggle" aria-label="Abrir menu" aria-expanded="false" onclick="(function(btn){var h=btn.closest('.header');var open=!(h&&h.classList.contains('mobile-menu-open'));if(h)h.classList.toggle('mobile-menu-open',open);document.body.classList.toggle('mobile-menu-open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',open?'Cerrar menu':'Abrir menu');var i=btn.querySelector('i');if(i)i.className=open?'fas fa-times':'fas fa-bars';})(this)">
+        <i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>
+    </button>
+
     <div class="nav-container">
         <nav class="nav">
             <input type="text" class="search-bar" placeholder="🔍 Buscar productos..." id="searchInput">

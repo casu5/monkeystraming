@@ -144,6 +144,7 @@ $page_title = "Mis ventas - Vendedor";
     .alert{padding:12px;border-radius:12px;margin-bottom:14px}.err{background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.35);color:#ff6b6b}
     @media(max-width:760px){th:nth-child(4),td:nth-child(4),th:nth-child(5),td:nth-child(5){display:none}}
   </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 <?php sellerPanelStart('Mis ventas', 'Revisa compras, clientes, productos vendidos y vencimientos.', $seller, 'ventas'); ?>

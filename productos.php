@@ -425,6 +425,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
         }
     </style>
     <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260601">
+    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
     <style>
         .header .nav .btn-registro {
             min-width: 140px !important;
@@ -436,6 +437,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             border-radius: 10px !important;
         }
     </style>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -444,6 +446,10 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
         <!-- REEMPLAZA LA URL CON LA RUTA DE TU IMAGEN DE LOGO -->
         <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
     </div>
+    <button type="button" class="mobile-nav-toggle" aria-label="Abrir menu" aria-expanded="false" onclick="(function(btn){var h=btn.closest('.header');var open=!(h&&h.classList.contains('mobile-menu-open'));if(h)h.classList.toggle('mobile-menu-open',open);document.body.classList.toggle('mobile-menu-open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',open?'Cerrar menu':'Abrir menu');var i=btn.querySelector('i');if(i)i.className=open?'fas fa-times':'fas fa-bars';})(this)">
+        <i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>
+    </button>
+    <div class="nav-container">
     <nav class="nav">
         <input type="text" class="search-bar" placeholder="🔍 Buscar productos..." id="searchInput">
         <a href="index.php"><i class="fas fa-home"></i> Inicio</a>
@@ -467,6 +473,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             <a href="register.php" class="btn-registro"><i class="fas fa-user-plus"></i> Registrarse</a>
         <?php endif; ?>
     </nav>
+    </div>
 </header>
 
 <div class="container">
@@ -613,7 +620,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
   }
 })();
 
-// =================== COMPRA MODAL (con visto ✅) ===================
+// =================== COMPRA MODAL (con visto OK) ===================
 const userIsLogged  = <?php echo isLoggedIn() ? 'true' : 'false'; ?>;
 const userSaldo     = <?php echo $usuario_actual ? (float)$saldo_actual : 0; ?>;
 const redirectLogin = <?php echo json_encode('login.php?redirect='.$currentUrl, JSON_UNESCAPED_UNICODE); ?>;
@@ -655,7 +662,7 @@ async function safeJson(response){
 function copiarTexto(txt){
   if (!txt) return;
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(txt).then(()=>toast('Copiado ✅')).catch(()=>toast('No se pudo copiar'));
+    navigator.clipboard.writeText(txt).then(()=>toast('Copiado OK')).catch(()=>toast('No se pudo copiar'));
   } else {
     const ta = document.createElement('textarea');
     ta.value = txt;
@@ -663,7 +670,7 @@ function copiarTexto(txt){
     ta.style.left = '-9999px';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); toast('Copiado ✅'); } catch(e){ toast('No se pudo copiar'); }
+    try { document.execCommand('copy'); toast('Copiado OK'); } catch(e){ toast('No se pudo copiar'); }
     document.body.removeChild(ta);
   }
 }
@@ -674,7 +681,7 @@ function escapeHtml(s){
   }[m]));
 }
 
-// ✅ Vista de compra exitosa + visto animado + datos + copiar
+// OK Vista de compra exitosa + visto animado + datos + copiar
 function renderCompraExitosa(modal, data){
   // Soporta varias formas que pueda mandar tu backend:
   const compra = data.purchase || data.compra || data.data || {};
@@ -726,30 +733,30 @@ Contraseña: ${pass}${perfil ? "\nPerfil: "+perfil : ""}${pin ? "\nPIN: "+pin : 
       <div style="text-align:left; background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; border:1px solid rgba(255,255,255,0.06);">
         <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="color:#aaa; font-size:.9rem;">Producto</div>
-          <div style="color:#fff; font-weight:700;">${escapeHtml(producto||'—')}</div>
+          <div style="color:#fff; font-weight:700;">${escapeHtml(producto||'-')}</div>
         </div>
         <div style="height:10px"></div>
 
         <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="color:#aaa; font-size:.9rem;">Fecha de compra</div>
-          <div style="color:#fff; font-weight:700;">${escapeHtml(fecha||'—')}</div>
+          <div style="color:#fff; font-weight:700;">${escapeHtml(fecha||'-')}</div>
         </div>
         <div style="height:10px"></div>
 
         <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="color:#aaa; font-size:.9rem;">Vence</div>
-          <div style="color:#fff; font-weight:700;">${escapeHtml(vence||'—')}</div>
+          <div style="color:#fff; font-weight:700;">${escapeHtml(vence||'-')}</div>
         </div>
 
         <hr style="border:none; border-top:1px solid rgba(255,255,255,0.08); margin:14px 0;">
 
         <div style="color:#aaa; font-size:.9rem; margin-bottom:6px;">Usuario/Correo</div>
-        <div style="color:#fff; font-weight:800; word-break:break-all;">${escapeHtml(userOrEmail||'—')}</div>
+        <div style="color:#fff; font-weight:800; word-break:break-all;">${escapeHtml(userOrEmail||'-')}</div>
 
         <div style="height:10px"></div>
 
         <div style="color:#aaa; font-size:.9rem; margin-bottom:6px;">Contraseña</div>
-        <div style="color:#fff; font-weight:800; word-break:break-all;">${escapeHtml(pass||'—')}</div>
+        <div style="color:#fff; font-weight:800; word-break:break-all;">${escapeHtml(pass||'-')}</div>
 
         ${perfil ? `<div style="height:10px"></div><div style="color:#aaa;font-size:.9rem;margin-bottom:6px;">Perfil</div><div style="color:#fff;font-weight:800;">${escapeHtml(perfil)}</div>` : ``}
         ${pin ? `<div style="height:10px"></div><div style="color:#aaa;font-size:.9rem;margin-bottom:6px;">PIN</div><div style="color:#fff;font-weight:800;">${escapeHtml(pin)}</div>` : ``}
@@ -888,7 +895,7 @@ function abrirModalCompra(id, nombre, precio){
             if (!r.ok || !j.ok) {
                 msg.textContent = j.message || 'No se pudo añadir al carrito.';
             } else {
-                toast('Añadido al carrito ✅');
+                toast('Añadido al carrito OK');
                 cerrarModal(modal);
             }
         } catch (e) {
@@ -938,7 +945,7 @@ function abrirModalCompra(id, nombre, precio){
                 return;
             }
 
-            // ✅ Compra OK -> mostrar visto + credenciales + copiar
+            // OK Compra OK -> mostrar visto + credenciales + copiar
             renderCompraExitosa(modal, j);
 
         } catch (e) {

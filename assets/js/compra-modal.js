@@ -295,7 +295,7 @@
     });
   }
 
-  // ✅ Delegación: funciona aunque los botones se generen por PHP
+  // OK Delegación: funciona aunque los botones se generen por PHP
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-buy');
     if (!btn) return;

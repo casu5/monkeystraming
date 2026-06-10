@@ -1,5 +1,5 @@
 <?php
-// admin/tickets.php — Soporte: listar, ver, responder y cerrar tickets (robusto con introspección de tablas/columnas)
+// admin/tickets.php - Soporte: listar, ver, responder y cerrar tickets (robusto con introspección de tablas/columnas)
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php'; // <-- para helpers de sesión/redirect como en stock.php
@@ -758,6 +758,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
             line-height: 1.5;
         }
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -838,7 +839,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
                                 $estado = $T_STATUS ? (string)($t['estado'] ?? '') : '';
                                 $asunto = $t['asunto'] ?? ('Ticket #' . (int)$t['id']);
                                 $msg    = $t['mensaje'] ?? '';
-                                $uName  = $t['usuario_nombre'] ?? '—';
+                                $uName  = $t['usuario_nombre'] ?? '-';
                                 $uMail  = $t['usuario_email'] ?? '';
                                 $uWhatsapp = $t['usuario_whatsapp'] ?? '';
                             ?>
@@ -848,7 +849,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
                                     <div style="font-weight:900;color:#fff;"><?php echo h($asunto); ?></div>
                                     <?php if ($msg): ?>
                                         <div class="muted" style="margin-top:4px;font-size:0.85rem;">
-                                            <?php echo h(mb_strimwidth($msg, 0, 120, '…', 'UTF-8')); ?>
+                                            <?php echo h(mb_strimwidth($msg, 0, 120, 'â€¦', 'UTF-8')); ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -871,14 +872,14 @@ $page_title = "Tickets - Admin - Monkeystraming";
                                             </a>
                                         </div>
                                     <?php else: ?>
-                                        <span class="muted">—</span>
+                                        <span class="muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($T_STATUS): ?>
                                         <span class="badge <?php echo badgeClass($estado); ?>"><?php echo h($estado); ?></span>
                                     <?php else: ?>
-                                        <span class="muted">—</span>
+                                        <span class="muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -914,11 +915,11 @@ $page_title = "Tickets - Admin - Monkeystraming";
                     $estado = $T_STATUS ? (string)($ticket['estado'] ?? '') : '';
                     $asunto = $ticket['asunto'] ?? ('Ticket #' . (int)$ticket['id']);
                     $msg    = $ticket['mensaje'] ?? '';
-                    $uName  = $ticket['usuario_nombre'] ?? '—';
+                    $uName  = $ticket['usuario_nombre'] ?? '-';
                     $uMail  = $ticket['usuario_email'] ?? '';
                     $uWhatsapp = $ticket['usuario_whatsapp'] ?? '';
                     $prio   = $T_PRIORITY ? (string)($ticket['prioridad'] ?? '') : '';
-                    $creado = $T_CREATED && !empty($ticket['creado_en']) ? date('d/m/Y H:i', strtotime($ticket['creado_en'])) : '—';
+                    $creado = $T_CREATED && !empty($ticket['creado_en']) ? date('d/m/Y H:i', strtotime($ticket['creado_en'])) : '-';
                     $resp   = $T_REPLY ? (string)($ticket['respuesta'] ?? '') : '';
                     $respAt = $T_REPLIED_AT && !empty($ticket['respondido_en']) ? date('d/m/Y H:i', strtotime($ticket['respondido_en'])) : '';
                     $closeAt= $T_CLOSED_AT && !empty($ticket['cerrado_en']) ? date('d/m/Y H:i', strtotime($ticket['cerrado_en'])) : '';
@@ -929,7 +930,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
                         <div style="font-size:1.15rem;font-weight:900;color:#fff;margin-top:3px;"><?php echo h($asunto); ?></div>
                         <div class="muted" style="margin-top:6px;">
                             <i class="fas fa-user"></i> <?php echo h($uName); ?>
-                            <?php if ($uMail): ?> — <?php echo h($uMail); ?><?php endif; ?>
+                            <?php if ($uMail): ?> - <?php echo h($uMail); ?><?php endif; ?>
                         </div>
                         <div class="muted" style="margin-top:6px;">
                             <i class="fas fa-clock"></i> <?php echo h($creado); ?>
@@ -973,7 +974,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
                                 $role = (string)($m[$TM_ROLE] ?? 'USER');
                                 $cls = ($role === 'ADMIN') ? 'admin' : ($role === 'SYSTEM' ? 'system' : 'user');
                                 $when = $TM_CA ? (string)($m[$TM_CA] ?? '') : '';
-                                $whenFmt = $when ? date('d/m/Y H:i', strtotime($when)) : '—';
+                                $whenFmt = $when ? date('d/m/Y H:i', strtotime($when)) : '-';
                                 
                                 if ($role === 'SYSTEM') {
                                     $sender = 'Sistema';
@@ -1006,7 +1007,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
                     <!-- Mensaje original del ticket -->
                     <div>
                         <div class="muted" style="margin-bottom:8px;"><i class="fas fa-comment-dots"></i> Mensaje del usuario</div>
-                        <div class="msgBox"><?php echo h($msg !== '' ? $msg : '—'); ?></div>
+                        <div class="msgBox"><?php echo h($msg !== '' ? $msg : '-'); ?></div>
                     </div>
                 <?php endif; ?>
 

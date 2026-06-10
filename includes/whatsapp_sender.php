@@ -11,9 +11,9 @@ function enviarWhatsApp($numero, $mensaje) {
     $url = "https://api.whatsapp.com/send?phone=" . $numero . "&text=" . $mensaje_codificado;
     
     // Para debugging
-    error_log("📱 Enviando WhatsApp a: " . $numero);
-    error_log("📝 Mensaje: " . $mensaje);
-    error_log("🔗 URL: " . $url);
+    error_log(" Enviando WhatsApp a: " . $numero);
+    error_log(" Mensaje: " . $mensaje);
+    error_log("URL: " . $url);
     
     // **OPCIÓN 1: Redirigir a WhatsApp Web (más simple)**
     // El usuario debe tener WhatsApp Web abierto

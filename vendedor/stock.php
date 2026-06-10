@@ -174,6 +174,7 @@ $page_title = "Mi stock - Vendedor";
     table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid rgba(255,255,255,.07)}th{color:#9a9a9a;font-size:.86rem}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 <?php sellerPanelStart('Mi stock', 'Carga cuentas y perfiles que se entregaran automaticamente al comprar.', $seller, 'stock'); ?>

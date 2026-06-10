@@ -95,7 +95,7 @@ if (false && isset($_GET['enviar'])) {
         header("Location: $whatsapp_url");
         exit;
     } else {
-        $mensaje = '❌ La solicitud no existe o ya fue enviada';
+        $mensaje = 'âŒ La solicitud no existe o ya fue enviada';
     }
 }
 
@@ -107,9 +107,9 @@ if (false && isset($_GET['eliminar'])) {
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
-        $mensaje = '✅ Solicitud eliminada';
+        $mensaje = 'OK Solicitud eliminada';
     } else {
-        $mensaje = '❌ Error al eliminar la solicitud';
+        $mensaje = 'âŒ Error al eliminar la solicitud';
     }
     $stmt->close();
 }
@@ -247,6 +247,7 @@ $result = $conexion->query($sql);
             th, td { padding: 10px; }
         }
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
     <?php renderAdminSidebar($conexion, 'admin_recuperaciones.php'); ?>
@@ -283,8 +284,8 @@ $result = $conexion->query($sql);
         </header>
         
         <?php if ($mensaje): ?>
-            <div class="alert <?php echo strpos($mensaje, '❌') !== false ? 'alert-error' : 'alert-success'; ?>">
-                <i class="fas fa-<?php echo strpos($mensaje, '❌') !== false ? 'exclamation-circle' : 'check-circle'; ?>"></i>
+            <div class="alert <?php echo strpos($mensaje, 'âŒ') !== false ? 'alert-error' : 'alert-success'; ?>">
+                <i class="fas fa-<?php echo strpos($mensaje, 'âŒ') !== false ? 'exclamation-circle' : 'check-circle'; ?>"></i>
                 <?php echo recH($mensaje); ?>
             </div>
         <?php endif; ?>

@@ -1,8 +1,4 @@
 <?php
-/**
- * config/database.php
- * Bootstrap mínimo: sesión + conexión DB + helpers estándar.
- */
 
 declare(strict_types=1);
 
@@ -49,12 +45,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
 $db_config = [
-    'host'   => getenv('DB_HOST') ?: 'localhost',
-    'user'   => getenv('DB_USER') ?: 'monkey',
-    'pass'   => getenv('DB_PASS') ?: 'LuisTuPapy*25',
-    'name'   => getenv('DB_NAME') ?: 'monkeystraming_2',
-    'port'   => (int)(getenv('DB_PORT') ?: 3306),
-    'charset'=> getenv('DB_CHARSET') ?: 'utf8mb4',
+    'host'   => getenv('DB_HOST') !== false ? getenv('DB_HOST') : 'localhost',
+    'user'   => getenv('DB_USER') !== false ? getenv('DB_USER') : 'monkey',
+    'pass'   => getenv('DB_PASS') !== false ? getenv('DB_PASS') : 'LuisTuPapy*25',
+    'name'   => getenv('DB_NAME') !== false ? getenv('DB_NAME') : 'monkeystraming_2',
+    'port'   => (int)(getenv('DB_PORT') !== false ? getenv('DB_PORT') : 3306),
+    'charset'=> getenv('DB_CHARSET') !== false ? getenv('DB_CHARSET') : 'utf8mb4',
 ];
 
 

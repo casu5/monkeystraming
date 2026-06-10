@@ -580,6 +580,7 @@ $adminEmail = $admin['email'] ?? '';
             th, td{min-width:120px}
         }
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -589,7 +590,7 @@ $adminEmail = $admin['email'] ?? '';
     <header class="admin-header">
         <div class="header-title">
             <h1>Recargas</h1>
-            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " — " . h($adminEmail) : ""; ?></p>
+            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " - " . h($adminEmail) : ""; ?></p>
         </div>
 
         <div class="header-actions">

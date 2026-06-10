@@ -1,5 +1,5 @@
 <?php
-// admin/configuracion.php — Configuración (métodos de pago)
+// admin/configuracion.php - Configuración (métodos de pago)
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 
@@ -347,6 +347,7 @@ $page_title = "Configuración - Admin - Monkeystraming";
         .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05)}
         img.thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 <?php renderAdminSidebar($conexion, 'configuracion.php'); ?>
@@ -412,7 +413,7 @@ $page_title = "Configuración - Admin - Monkeystraming";
                                     <?php if ($img): ?>
                                         <img class="thumb" src="../<?php echo h($img); ?>" alt="img">
                                     <?php else: ?>
-                                        <div class="muted">—</div>
+                                        <div class="muted">-</div>
                                     <?php endif; ?>
                                 </td>
                             <?php endif; ?>
@@ -421,7 +422,7 @@ $page_title = "Configuración - Admin - Monkeystraming";
                                 <div style="font-weight:900;color:#fff;"><?php echo h($nombre); ?></div>
                                 <?php if ($C_DESC && !empty($m[$C_DESC])): ?>
                                     <div class="muted" style="margin-top:4px;font-size:0.85rem;">
-                                        <?php echo h(mb_strimwidth((string)$m[$C_DESC], 0, 90, '…', 'UTF-8')); ?>
+                                        <?php echo h(mb_strimwidth((string)$m[$C_DESC], 0, 90, 'â€¦', 'UTF-8')); ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
@@ -574,7 +575,7 @@ $page_title = "Configuración - Admin - Monkeystraming";
                     </div>
                 <?php endif; ?>
                 <input type="file" name="imagen_file" accept="image/jpeg,image/png,image/webp">
-                <div class="muted" style="margin-top:6px;font-size:0.85rem;">JPG/PNG/WEBP — máx 2MB — se guarda en <strong>uploads/metodos/</strong></div>
+                <div class="muted" style="margin-top:6px;font-size:0.85rem;">JPG/PNG/WEBP - máx 2MB - se guarda en <strong>uploads/metodos/</strong></div>
             <?php endif; ?>
 
             <?php if ($C_ACTIVO): ?>

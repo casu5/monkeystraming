@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['whatsapp'])) {
     
     // Validar número
     if (empty($whatsapp_input) || !preg_match('/^9[0-9]{8}$/', $whatsapp_input)) {
-        $error = '❌ Ingresa un número de WhatsApp válido de 9 dígitos (ej: 987654321)';
+        $error = 'âŒ Ingresa un número de WhatsApp válido de 9 dígitos (ej: 987654321)';
     } else {
         // Buscar usuario
         $whatsapp_con_codigo = '+51' . $whatsapp_input;
@@ -124,13 +124,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['whatsapp'])) {
                 
                 // Mostrar botón de WhatsApp
                 $mostrar_formulario = false;
-                $success = '✅ Cuenta encontrada. Notifica al admin.';
+                $success = 'OK Cuenta encontrada. Notifica al admin.';
                 
             } else {
-                $error = '❌ No encontramos una cuenta con ese número';
+                $error = 'âŒ No encontramos una cuenta con ese número';
             }
         } else {
-            $error = '❌ Error en la base de datos';
+            $error = 'âŒ Error en la base de datos';
         }
     }
 }
@@ -230,6 +230,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['whatsapp'])) {
             color: #25D366; font-weight: bold;
         }
     </style>
+    <link rel="stylesheet" href="assets/css/auth-responsive.css">
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
     <div class="container">
@@ -251,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['whatsapp'])) {
                 <div class="alert success">
                     <i class="fas fa-check-circle"></i> 
                     <div>
-                        ✅ Hola <strong><?php echo htmlspecialchars($nombre_usuario); ?></strong><br>
+                        OK Hola <strong><?php echo htmlspecialchars($nombre_usuario); ?></strong><br>
                         Tu cuenta ha sido encontrada
                     </div>
                 </div>

@@ -798,6 +798,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
     <link rel="stylesheet" href="assets/css/auth-responsive.css">
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 

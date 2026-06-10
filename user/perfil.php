@@ -147,7 +147,7 @@ include '../includes/header.php';
         <!-- Título y resumen -->
         <div class="welcome-card" style="margin-bottom: 20px;">
             <div class="welcome-content">
-                <h1>Mi perfil 👤</h1>
+                <h1>Mi perfil </h1>
                
             </div>
            

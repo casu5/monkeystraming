@@ -518,3 +518,281 @@ table {
         white-space: normal !important;
     }
 }
+
+@media (max-width: 760px) {
+    :root {
+        --header-height: 68px !important;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-attachment: fixed !important;
+        touch-action: manipulation;
+    }
+
+    body.sidebar-open {
+        overflow: hidden !important;
+    }
+
+    body.sidebar-open::after {
+        content: '' !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 999 !important;
+        background: rgba(0, 0, 0, .55) !important;
+        backdrop-filter: blur(2px) !important;
+    }
+
+    .admin-sidebar {
+        z-index: 1002 !important;
+        width: min(288px, calc(100vw - 36px)) !important;
+        max-width: calc(100vw - 36px) !important;
+        padding-top: 18px !important;
+        border-radius: 0 14px 14px 0 !important;
+    }
+
+    .sidebar-toggle {
+        top: 12px !important;
+        left: 12px !important;
+        z-index: 1003 !important;
+        width: 44px !important;
+        height: 44px !important;
+        box-shadow: 0 10px 26px rgba(0,0,0,.35) !important;
+    }
+
+    .admin-logo {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .admin-menu {
+        padding-bottom: 12px !important;
+    }
+
+    .menu-section {
+        margin-bottom: 12px !important;
+        padding: 0 10px !important;
+    }
+
+    .menu-section h3 {
+        padding-left: 8px !important;
+        font-size: .72rem !important;
+    }
+
+    .menu-item {
+        min-height: 46px !important;
+        gap: 11px !important;
+        margin-bottom: 6px !important;
+        padding: 12px 13px !important;
+        border-radius: 10px !important;
+    }
+
+    .menu-item:hover {
+        transform: none !important;
+    }
+
+    .menu-item span:not(.menu-badge) {
+        white-space: normal !important;
+        line-height: 1.2 !important;
+    }
+
+    .admin-header {
+        min-height: var(--header-height) !important;
+        padding: 12px 12px 12px 68px !important;
+        gap: 10px !important;
+    }
+
+    .header-title h1 {
+        font-size: clamp(1.08rem, 5vw, 1.35rem) !important;
+        line-height: 1.15 !important;
+    }
+
+    .header-title p {
+        font-size: .82rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .header-actions,
+    .user-menu {
+        gap: 10px !important;
+    }
+
+    .user-avatar {
+        width: 38px !important;
+        height: 38px !important;
+        flex-basis: 38px !important;
+        font-size: 1rem !important;
+    }
+
+    .user-name,
+    .user-role {
+        font-size: .84rem !important;
+    }
+
+    .admin-content {
+        padding: 14px 10px 22px !important;
+    }
+
+    .seller-main .seller-page-wrap {
+        max-width: none !important;
+    }
+
+    .stats-grid,
+    .content-grid,
+    .quick-actions,
+    .grid,
+    .actions,
+    .layout,
+    .two-col,
+    .details-grid,
+    .filters,
+    .filtros-container,
+    .row,
+    .formrow {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .content-card,
+    .card,
+    .stat-card,
+    .quick-action-card {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .card-body {
+        padding: 14px !important;
+    }
+
+    .card-header,
+    .section-title,
+    .topbar,
+    .top,
+    .hero,
+    .stat {
+        gap: 10px !important;
+    }
+
+    .stat-card,
+    .stat,
+    .quick-action-card {
+        min-height: auto !important;
+    }
+
+    .stat-icon,
+    .icon {
+        width: 42px !important;
+        height: 42px !important;
+        flex: 0 0 42px !important;
+        border-radius: 10px !important;
+        font-size: 1.05rem !important;
+    }
+
+    .stat-number,
+    .num,
+    .stat-card .value {
+        font-size: clamp(1.18rem, 7vw, 1.55rem) !important;
+        line-height: 1.15 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .table-wrap,
+    .admin-table-wrap,
+    .card-body:has(table),
+    .card:has(table) {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    table,
+    .data-table,
+    .table-wrap table,
+    .admin-table-wrap table,
+    .seller-main table {
+        min-width: 680px !important;
+        font-size: .88rem !important;
+    }
+
+    th,
+    td {
+        padding: 10px 9px !important;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        font-size: 16px !important;
+    }
+
+    input,
+    select,
+    textarea {
+        min-height: 44px !important;
+        max-width: 100% !important;
+    }
+
+    textarea {
+        min-height: 110px !important;
+    }
+
+    .btn,
+    .action-btn,
+    .iconbtn,
+    button[type="submit"],
+    input[type="submit"] {
+        min-height: 44px !important;
+        width: auto !important;
+        max-width: 100% !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        line-height: 1.15 !important;
+    }
+
+    .action-buttons,
+    .actions-row,
+    .review-actions {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .action-buttons .btn,
+    .actions-row .btn,
+    .review-actions .btn,
+    .review-actions button {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .admin-header {
+        padding-left: 64px !important;
+    }
+
+    .admin-content {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .content-card,
+    .card,
+    .stat-card,
+    .quick-action-card {
+        padding: 12px !important;
+    }
+
+    table,
+    .data-table,
+    .table-wrap table,
+    .admin-table-wrap table,
+    .seller-main table {
+        min-width: 620px !important;
+    }
+}

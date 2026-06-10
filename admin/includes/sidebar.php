@@ -128,13 +128,43 @@ if (!function_exists('renderAdminSidebar')) {
         </div>
     </div>
 </aside>
+<script src="../assets/js/mobile-enhance.js?v=20260610" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var sidebar = document.getElementById('adminSidebar');
     var toggle = document.getElementById('sidebarToggle');
     if (sidebar && toggle) {
+        function setSidebarOpen(open) {
+            sidebar.classList.toggle('active', open);
+            sidebar.style.transform = '';
+            document.body.classList.toggle('sidebar-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            toggle.setAttribute('aria-label', open ? 'Cerrar menu' : 'Abrir menu');
+        }
+
+        toggle.setAttribute('aria-controls', 'adminSidebar');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Abrir menu');
+
         toggle.addEventListener('click', function () {
-            sidebar.classList.toggle('active');
+            setSidebarOpen(!sidebar.classList.contains('active'));
+        });
+
+        sidebar.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                setSidebarOpen(false);
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!sidebar.classList.contains('active')) return;
+            if (sidebar.contains(event.target) || toggle.contains(event.target)) return;
+            setSidebarOpen(false);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            setSidebarOpen(false);
         });
     }
 });

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// ✅ Fallback por si redirect() no existe en auth.php
+// OK Fallback por si redirect() no existe en auth.php
 if (!function_exists('redirect')) {
     function redirect($url) {
         header("Location: $url");
@@ -88,7 +88,7 @@ $stmt_tickets->close();
 
 $tickets_activos = (int)($row_tickets['total_tickets'] ?? 0);
 
-// ✅ NUEVO: Contar productos vencidos y próximos a vencer
+// OK NUEVO: Contar productos vencidos y próximos a vencer
 $sql_vencimientos = "SELECT 
     COUNT(CASE WHEN fecha_vencimiento < NOW() THEN 1 END) AS vencidos,
     COUNT(CASE WHEN fecha_vencimiento BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 1 END) AS proximos_a_vencer,
@@ -167,7 +167,7 @@ include '../includes/header.php';
         <!-- Bienvenida -->
         <div class="welcome-card">
             <div class="welcome-content">
-                <h1>Hola, <?php echo htmlspecialchars($user_name); ?>! 👋</h1>
+                <h1>Hola, <?php echo htmlspecialchars($user_name); ?>! </h1>
                 <p>Bienvenido a tu panel de control</p>
             </div>
             <div class="saldo-info">
@@ -201,7 +201,7 @@ include '../includes/header.php';
                 </div>
             </div>
 
-            <!-- ✅ NUEVO: Productos Vigentes -->
+            <!-- OK NUEVO: Productos Vigentes -->
             
 
             <div class="stat-card">
@@ -225,7 +225,7 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- ✅ NUEVO: Alerta de productos vencidos -->
+        <!-- OK NUEVO: Alerta de productos vencidos -->
         <?php if ($productos_vencidos > 0): ?>
         <div class="alert-card" style="background: rgba(255, 59, 48, 0.1); border-left: 4px solid #ff3b30;">
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -275,10 +275,10 @@ include '../includes/header.php';
                                 
                                 if ($vencimiento < $hoy) {
                                     $vencimiento_class = 'vencido';
-                                    $vencimiento_txt .= ' ⚠️';
+                                    $vencimiento_txt .= ' âš ï¸';
                                 } elseif (($vencimiento - $hoy) < (3 * 86400)) {
                                     $vencimiento_class = 'proximo';
-                                    $vencimiento_txt .= ' ⏳';
+                                    $vencimiento_txt .= ' â³';
                                 }
                             }
                         ?>
@@ -419,7 +419,7 @@ include '../includes/header.php';
 .stat-content h3 { font-size: 1.8rem; color: #fff; margin-bottom: 5px; }
 .stat-content p { color: #aaa; font-size: 0.9rem; }
 
-/* ✅ NUEVO: Alert card */
+/* OK NUEVO: Alert card */
 .alert-card {
     display: flex;
     justify-content: space-between;
@@ -447,7 +447,7 @@ include '../includes/header.php';
 .mini-link:hover { color: #0de0c9; }
 .muted { color: #aaa; }
 
-/* ✅ NUEVO: Colores para vencimientos */
+/* OK NUEVO: Colores para vencimientos */
 .vencido { color: #ff3b30; font-weight: bold; }
 .proximo { color: #ffcc00; font-weight: bold; }
 

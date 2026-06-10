@@ -1,5 +1,5 @@
 <?php
-// admin/usuarios.php — Gestión REAL de usuarios (activar/suspender, ver saldo, cambiar rol)
+// admin/usuarios.php - Gestión REAL de usuarios (activar/suspender, ver saldo, cambiar rol)
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/includes/sidebar.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -446,6 +446,7 @@ $adminEmail = $admin['email'] ?? '';
             th:nth-child(3), td:nth-child(3){display:none}
         }
     </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -455,7 +456,7 @@ $adminEmail = $admin['email'] ?? '';
     <header class="admin-header">
         <div class="header-title">
             <h1>Usuarios</h1>
-            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " — " . h($adminEmail) : ""; ?></p>
+            <p>Bienvenido, <?php echo h($adminName); ?><?php echo $adminEmail ? " - " . h($adminEmail) : ""; ?></p>
         </div>
 
         <div class="header-actions">

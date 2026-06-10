@@ -2,12 +2,12 @@
 require_once '../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// ✅ INICIAR SESIÓN SI NO ESTÁ INICIADA
+// OK INICIAR SESIÓN SI NO ESTÁ INICIADA
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ✅ FUNCIÓN REDIRECT (si no existe)
+// OK FUNCIÓN REDIRECT (si no existe)
 if (!function_exists('redirect')) {
     function redirect($url) {
         header("Location: $url");
@@ -15,7 +15,7 @@ if (!function_exists('redirect')) {
     }
 }
 
-// ✅ VERIFICAR LOGIN MANUALMENTE
+// OK VERIFICAR LOGIN MANUALMENTE
 requireRole(['cliente', 'admin']);
 
 function tableExistsUserHistory(mysqli $cx, string $table): bool {
@@ -33,7 +33,7 @@ function colExistsUserHistory(mysqli $cx, string $table, string $col): bool {
 
 $user_id = (int)$_SESSION['user_id'];
 
-// ✅ OBTENER DATOS DEL USUARIO
+// OK OBTENER DATOS DEL USUARIO
 $sql_user = "SELECT id, nombre, email, saldo FROM usuarios WHERE id = ?";
 $stmt_user = $conexion->prepare($sql_user);
 $stmt_user->bind_param("i", $user_id);
@@ -49,7 +49,7 @@ $page_title = "Historial - Monkeystraming";
 
 include '../includes/header.php';
 
-// ✅ COMPRAS CON FECHA DE VENCIMIENTO
+// OK COMPRAS CON FECHA DE VENCIMIENTO
 $hasCuentas = tableExistsUserHistory($conexion, 'cuentas');
 $hasPerfiles = tableExistsUserHistory($conexion, 'cuenta_perfiles');
 $comprasHasCuenta = colExistsUserHistory($conexion, 'compras', 'cuenta_id');
@@ -82,7 +82,7 @@ $stmt_c->bind_param("i", $user_id);
 $stmt_c->execute();
 $compras = $stmt_c->get_result();
 
-// ✅ RECARGAS
+// OK RECARGAS
 $sql_r = "SELECT id, metodo, monto, comision, estado, fecha_solicitud
           FROM recargas
           WHERE usuario_id = ?
@@ -108,7 +108,7 @@ $recargas = $stmt_r->get_result();
                         <tr>
                             <th>Producto</th>
                             <th>Fecha compra</th>
-                            <th>Vence el</th> <!-- ✅ NUEVA COLUMNA -->
+                            <th>Vence el</th> <!-- OK NUEVA COLUMNA -->
                             <th>Credenciales</th>
                             <th>Monto</th>
                             <th>Estado</th>
@@ -116,7 +116,7 @@ $recargas = $stmt_r->get_result();
                     </thead>
                     <tbody>
                     <?php while($c = $compras->fetch_assoc()): 
-                        // ✅ CALCULAR ESTADO DE VENCIMIENTO
+                        // OK CALCULAR ESTADO DE VENCIMIENTO
                         $vencimiento_txt = '-';
                         $vencimiento_class = '';
                         
@@ -127,10 +127,10 @@ $recargas = $stmt_r->get_result();
                             
                             if ($vencimiento < $hoy) {
                                 $vencimiento_class = 'vencido';
-                                $vencimiento_txt .= ' ⚠️';
+                                $vencimiento_txt .= ' âš ï¸';
                             } elseif (($vencimiento - $hoy) < (3 * 86400)) {
                                 $vencimiento_class = 'proximo';
-                                $vencimiento_txt .= ' ⏳';
+                                $vencimiento_txt .= ' â³';
                             }
                         }
                     ?>
@@ -212,7 +212,7 @@ $recargas = $stmt_r->get_result();
 </div>
 
 <style>
-/* 🔥 ESTILOS ACTUALIZADOS */
+/*  ESTILOS ACTUALIZADOS */
 .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
 .user-dashboard { display: flex; flex-direction: column; gap: 30px; }
 
@@ -286,7 +286,7 @@ $recargas = $stmt_r->get_result();
     color: #ff3b30; 
 }
 
-/* ✅ ESTILOS PARA VENCIMIENTOS */
+/* OK ESTILOS PARA VENCIMIENTOS */
 .vencido { 
     color: #ff3b30 !important; 
     font-weight: bold; 

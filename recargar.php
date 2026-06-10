@@ -713,7 +713,7 @@ $recargas_recientes = $recargas_stmt->get_result();
             margin-top: 18px;
         }
 
-        /* ✅ ACTUALIZADO: MÁS GRANDE Y CUADRADO */
+        /* OK ACTUALIZADO: MÁS GRANDE Y CUADRADO */
         .metodo-image-container {
             width: 100%;
             max-width: 420px;          /* más grande */
@@ -888,13 +888,15 @@ $recargas_recientes = $recargas_stmt->get_result();
                 align-items: flex-start;
             }
 
-            /* ✅ Para móviles: un poco más compacto */
+            /* OK Para móviles: un poco más compacto */
             .metodo-image-container {
                 max-width: 320px;
             }
         }
     </style>
     <link rel="stylesheet" href="assets/css/header-unificado.css">
+    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 
@@ -903,6 +905,9 @@ $recargas_recientes = $recargas_stmt->get_result();
         <!-- REEMPLAZA LA URL CON LA RUTA DE TU IMAGEN DE LOGO -->
         <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
     </div>
+    <button type="button" class="mobile-nav-toggle" aria-label="Abrir menu" aria-expanded="false" onclick="(function(btn){var h=btn.closest('.header');var open=!(h&&h.classList.contains('mobile-menu-open'));if(h)h.classList.toggle('mobile-menu-open',open);document.body.classList.toggle('mobile-menu-open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',open?'Cerrar menu':'Abrir menu');var i=btn.querySelector('i');if(i)i.className=open?'fas fa-times':'fas fa-bars';})(this)">
+        <i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>
+    </button>
 
     <div class="nav-container">
         <nav class="nav">
@@ -939,7 +944,7 @@ $recargas_recientes = $recargas_stmt->get_result();
             <div class="saldo-amount">S/ <?php echo number_format($usuario_actual['saldo'], 2); ?></div>
         </div>
         <div class="user-details">
-            <div class="user-name">Hola, <?php echo htmlspecialchars($usuario_actual['nombre']); ?> 👋</div>
+            <div class="user-name">Hola, <?php echo htmlspecialchars($usuario_actual['nombre']); ?> </div>
             <p><?php echo htmlspecialchars($usuario_actual['email']); ?></p>
         </div>
     </div>
@@ -1074,7 +1079,7 @@ $recargas_recientes = $recargas_stmt->get_result();
                     <div class="upload-area" id="fileUploadArea">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Haz clic o arrastra tu archivo aquí</p>
-                        <small>Formatos permitidos: JPG, PNG, PDF — Máx: 5MB</small>
+                        <small>Formatos permitidos: JPG, PNG, PDF - Máx: 5MB</small>
                     </div>
                     <input type="file" name="comprobante" id="comprobante" accept="image/*,.pdf" hidden>
 

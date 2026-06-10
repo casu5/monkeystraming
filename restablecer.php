@@ -14,9 +14,9 @@ $resetRequest = null;
 
 // Verificar token
 if (false && (empty($token) || !isset($_SESSION['rec_token']) || $_SESSION['rec_token'] !== $token)) {
-    $error = '❌ Enlace inválido o expirado';
+    $error = 'âŒ Enlace inválido o expirado';
 } elseif (false && isset($_SESSION['rec_expira']) && $_SESSION['rec_expira'] < time()) {
-    $error = '❌ El enlace ha expirado (30 minutos)';
+    $error = 'âŒ El enlace ha expirado (30 minutos)';
 }
 
 // Cambiar contraseña
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         $stmt->bind_param("si", $hash, $usuarioId);
         
         if ($stmt->execute()) {
-            $success = '✅ Contraseña actualizada correctamente';
+            $success = 'OK Contraseña actualizada correctamente';
             // Limpiar sesión
             $del = $conexion->prepare("DELETE FROM recuperaciones_pendientes WHERE id = ?");
             $requestId = (int)$resetRequest['id'];
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
             $del->close();
             unset($_SESSION['rec_token'], $_SESSION['rec_usuario_id'], $_SESSION['rec_whatsapp'], $_SESSION['rec_expira']);
         } else {
-            $error = '❌ Error al actualizar la contraseña';
+            $error = 'âŒ Error al actualizar la contraseña';
         }
         $stmt->close();
     }
@@ -130,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         .links a { color: #12aaff; text-decoration: none; font-size: 0.95rem; }
         .links a:hover { text-decoration: underline; }
     </style>
+    <link rel="stylesheet" href="assets/css/auth-responsive.css">
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
     <div class="container">

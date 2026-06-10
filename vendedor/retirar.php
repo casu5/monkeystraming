@@ -217,6 +217,7 @@ $page_title = "Retirar saldo - Vendedor";
     @media(max-width:900px){.layout{grid-template-columns:1fr}.actions-row .btn{width:100%}}
     .voucher-link{display:inline-flex;align-items:center;gap:8px;margin-top:6px;color:#12aaff;text-decoration:none;font-weight:800}.voucher-thumb{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-top:8px}.mini-actions{display:flex;gap:8px;flex-wrap:wrap}.btn.danger{background:rgba(255,59,48,.14);color:#ff6b6b;border:1px solid rgba(255,59,48,.35)}
   </style>
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
 </head>
 <body>
 <?php sellerPanelStart('Retirar saldo', 'Solicita al admin el pago de tus ganancias disponibles.', $seller, 'retirar'); ?>

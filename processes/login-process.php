@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Buscar usuario
-    $sql = "SELECT id, nombre, email, password, role, saldo, estado 
-            FROM usuarios 
+    $sql = "SELECT id, nombre, email, password, role, saldo, estado
+            FROM usuarios
             WHERE email = ?";
     if ($stmt = $conexion->prepare($sql)) {
         $stmt->bind_param("s", $email);
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect('../login.php');
             }
 
-            // Verificar contraseña
+
             if (password_verify($password, $usuario['password'])) {
                 session_regenerate_id(true);
                 // Crear sesión
@@ -41,16 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_saldo'] = $usuario['saldo'];
                 $_SESSION['logged_in']  = true;
 
-                // Actualizar último login
+
                 $update_sql = "UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?";
                 if ($update_stmt = $conexion->prepare($update_sql)) {
                     $update_stmt->bind_param("i", $usuario['id']);
                     $update_stmt->execute();
                 }
 
-                
 
-              
+
+
                 if ($_SESSION['user_role'] === 'admin') {
                     redirect('../admin/index.php');
                 } elseif ($_SESSION['user_role'] === 'vendedor') {
