@@ -191,7 +191,7 @@ $page_title = "Panel vendedor - Monkeystraming";
     .stock-list{display:grid;gap:10px}.stock-item{display:flex;justify-content:space-between;gap:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
     @media(max-width:900px){.hero,.two-col{grid-template-columns:1fr}.hero-balance{text-align:left}.hero-balance .money{font-size:1.7rem}}
   </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610k">
 </head>
 <body>
   <?php sellerPanelStart('Panel vendedor', 'Hola, ' . ($vendedor['nombre'] ?? 'vendedor') . '. Gestiona tus productos, stock, ventas y retiros.', $vendedor, 'dashboard'); ?>

@@ -217,7 +217,7 @@ $page_title = "Retiros - Admin";
     @media(max-width:992px){.wrap{width:100%;margin-left:0;padding:82px 16px 24px}}
     @media(max-width:760px){.review-actions{grid-template-columns:1fr}th:nth-child(4),td:nth-child(4){display:none}}
   </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 <?php renderAdminSidebar($conexion, 'retiros.php'); ?>

@@ -347,7 +347,7 @@ $page_title = "Configuración - Admin - Monkeystraming";
         .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.05)}
         img.thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
     </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 <?php renderAdminSidebar($conexion, 'configuracion.php'); ?>

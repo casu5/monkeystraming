@@ -413,7 +413,7 @@ $adminEmail = $admin['email'] ?? '';
         }
         .muted{color:#777;font-size:.9rem}
     </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 

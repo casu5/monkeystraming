@@ -215,7 +215,7 @@ $page_title = "Mis productos - Vendedor";
     .thumb{width:54px;height:38px;border-radius:8px;object-fit:cover;background:#1a1d26}
     @media(max-width:900px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
   </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610k">
 </head>
 <body>
 <?php sellerPanelStart('Mis productos', 'Crea las cartillas que los clientes encontraran en el marketplace.', $seller, 'productos'); ?>

@@ -109,6 +109,7 @@ if (!function_exists('renderAdminSidebar')) {
                 <a href="retiros.php" class="menu-item <?php echo adminSidebarActive('retiros.php', $currentPage); ?>"><i class="fas fa-money-bill-transfer"></i><span>Retiros</span><span class="menu-badge"><?php echo (int)$stats['retiros_pendientes']; ?></span></a>
                 <a href="productos-admin.php" class="menu-item <?php echo adminSidebarActive('productos-admin.php', $currentPage); ?>"><i class="fas fa-box-open"></i><span>Productos</span><span class="menu-badge"><?php echo (int)$stats['productos_agotados']; ?></span></a>
                 <a href="stock.php" class="menu-item <?php echo adminSidebarActive('stock.php', $currentPage); ?>"><i class="fas fa-warehouse"></i><span>Stock</span></a>
+                <a href="carrusel.php" class="menu-item <?php echo adminSidebarActive('carrusel.php', $currentPage); ?>"><i class="fas fa-images"></i><span>Carrusel</span></a>
             </div>
 
             <div class="menu-section">
@@ -128,7 +129,7 @@ if (!function_exists('renderAdminSidebar')) {
         </div>
     </div>
 </aside>
-<script src="../assets/js/mobile-enhance.js?v=20260610" defer></script>
+<script src="../assets/js/mobile-enhance.js?v=20260610h" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var sidebar = document.getElementById('adminSidebar');

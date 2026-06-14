@@ -27,6 +27,9 @@ $usuario_actual = null;
 if (isLoggedIn()) {
     $usuario_actual = getCurrentUser();
 }
+$account_url = ($usuario_actual && (($usuario_actual['rol'] ?? $usuario_actual['role'] ?? '') === 'admin'))
+    ? 'admin/index.php'
+    : 'user/dashboard.php';
 
 /** Saldo real (por si getCurrentUser no trae saldo actualizado) */
 $saldo_actual = 0.0;
@@ -239,7 +242,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             color:#e5e5e5;min-height:100vh;
             display:flex;flex-direction:column;
         }
-        .header {
+        body:not(.home-scroll-nav) .header {
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -257,48 +260,48 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             overflow: hidden; /* Previene desbordamientos */
         }
 
-        .logo {
+        body:not(.home-scroll-nav) .logo {
             display: flex;
             align-items: center;
             height: 100%; /* Usa toda la altura del header */
         }
 
-        .logo-img {
+        body:not(.home-scroll-nav) .logo-img {
             height: 230px; /* Altura fija para el logo */
             width: auto; /* Ancho automático mantiene proporción */
             max-width: 300px; /* Ancho máximo para evitar que sea muy ancho */
             object-fit: contain; /* Mantiene proporción sin deformar */
             transition: transform 0.3s ease;
         }
-        .nav{display:flex;align-items:center;gap:25px;flex-wrap:wrap;}
-        .nav a{
+        body:not(.home-scroll-nav) .nav{display:flex;align-items:center;gap:25px;flex-wrap:wrap;}
+        body:not(.home-scroll-nav) .nav a{
             text-decoration:none;color:#d0d0d0;font-weight:500;
             transition:.3s;font-size:.95rem;
         }
-        .nav a:hover{color:#12aaff;transform:translateY(-1px);}
-        .btn-registro{
+        body:not(.home-scroll-nav) .nav a:hover{color:#12aaff;transform:translateY(-1px);}
+        body:not(.home-scroll-nav) .btn-registro{
             padding:10px 18px;background:linear-gradient(135deg,#12aaff,#0de0c9);
             border-radius:8px;color:#0d0f14!important;font-weight:600;
         }
-        .btn-registro:hover{
+        body:not(.home-scroll-nav) .btn-registro:hover{
             background:#0d92d6;color:#fff!important;transform:translateY(-2px);
             box-shadow:0 5px 15px rgba(18,170,255,0.3);
         }
-        .search-bar{
+        body:not(.home-scroll-nav) .search-bar{
             padding:10px 18px;border-radius:10px;
             border:1px solid rgba(255,255,255,0.1);
             background:rgba(255,255,255,0.05);
             color:#fff;outline:none;width:260px;font-size:.9rem;
         }
-        .search-bar:focus{
+        body:not(.home-scroll-nav) .search-bar:focus{
             border-color:#12aaff;
             box-shadow:0 0 0 3px rgba(18,170,255,0.2);
         }
-        .user-name-nav, .user-saldo-nav{
+        body:not(.home-scroll-nav) .user-name-nav, body:not(.home-scroll-nav) .user-saldo-nav{
             display:inline-flex;align-items:center;gap:6px;font-size:.9rem;
         }
-        .user-name-nav{color:#d0d0d0;}
-        .user-saldo-nav{
+        body:not(.home-scroll-nav) .user-name-nav{color:#d0d0d0;}
+        body:not(.home-scroll-nav) .user-saldo-nav{
             padding:6px 12px;border-radius:999px;
             background:rgba(18,170,255,0.12);
             color: #f9a42c;font-weight:600;
@@ -309,28 +312,42 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             padding:0 20px;gap:30px;width:100%;flex:1 0 auto;
         }
         .sidebar{
-            width:260px;padding:20px;background:rgba(255,255,255,0.03);
-            border-radius:16px;border:1px solid rgba(255,255,255,0.06);
+            width:250px;padding:20px;
+            background:radial-gradient(circle at 80% 0%,rgba(93,255,208,.08),transparent 180px),rgba(16,40,56,.72);
+            border-radius:20px;border:1px solid rgba(93,255,208,.12);
+            box-shadow:0 18px 50px rgba(0,0,0,.22),0 0 0 1px rgba(78,220,213,.05);
             backdrop-filter:blur(10px);height:fit-content;position:sticky;top:100px;
         }
         .sidebar h3{font-size:1.2rem;margin-bottom:18px;color: #ffffff;}
         .sidebar ul{list-style:none;}
         .sidebar ul li{
-            padding:10px 12px;border-radius:10px;margin-bottom:6px;
-            cursor:pointer;transition:.3s;color: #ffffff;font-size:.92rem;
+            min-height:44px;padding:10px 12px;border-radius:12px;margin-bottom:8px;
+            cursor:pointer;transition:.3s;color: #ffffff;font-size:.92rem;font-weight:800;
             display:flex;align-items:center;gap:10px;
         }
-        .sidebar ul li:hover{background:rgba(255,255,255,0.05);color: #fff;}
+        .sidebar ul li:hover{background:rgba(255,255,255,0.06);color: #fff;}
         .sidebar ul li.active{
-            background:linear-gradient(135deg,rgba(18,170,255,0.18),rgba(13,224,201,0.1));
-            color:#12aaff;border-left:3px solid #ffa812;
+            background:linear-gradient(135deg,rgba(18,170,255,0.18),rgba(13,224,201,0.12));
+            color:#55e7f2;border-left:3px solid #ffa812;
+            box-shadow:inset 0 0 0 1px rgba(93,255,208,.14);
         }
         .productos{flex:1;padding:10px 0;}
         .categoria-header{
             display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;
         }
+        .categoria-heading{
+            display:flex;align-items:center;gap:16px;min-width:0;
+        }
+        .categoria-icon{
+            width:44px;height:44px;border-radius:12px;
+            display:inline-flex;align-items:center;justify-content:center;
+            color:#0a2b34;
+            background:linear-gradient(135deg,#dcfff6,#77f2e5);
+            box-shadow:0 12px 28px rgba(47,231,223,.16);
+            flex:0 0 auto;
+        }
         .categoria-titulo{
-            font-size:2rem;font-weight:700;
+            font-size:2.55rem;line-height:1.05;font-weight:950;
             background:linear-gradient(135deg, #fff 0%, #7f8081);
             -webkit-background-clip:text;-webkit-text-fill-color:transparent;
         }
@@ -339,46 +356,94 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             border-radius:20px;font-size:.85rem;color:#12aaff;font-weight:600;
         }
         .grid-productos{
-            display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(302px,1fr));
+            gap:16px;
+            align-items:stretch;
         }
         .producto-card{
-            background:rgba(255,255,255,0.04);padding:18px;border-radius:16px;
-            border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(8px);
-            transition:.3s;position:relative;overflow:hidden;
+            display:grid;
+            grid-template-rows:345px auto auto auto 1fr auto;
+            gap:10px;
+            height:610px;
+            min-height:610px;
+            background:
+                radial-gradient(circle at 84% 0%,rgba(93,255,208,.09),transparent 192px),
+                linear-gradient(180deg,rgba(255,255,255,0.075),rgba(255,255,255,0.04));
+            padding:14px;
+            border-radius:26px;
+            border:1px solid rgba(93,255,208,0.10);
+            box-shadow:0 18px 50px rgba(0,0,0,.28),0 0 0 1px rgba(93,255,208,.08),0 16px 42px rgba(78,220,213,.08);
+            backdrop-filter:blur(8px);
+            transition:.3s;
+            position:relative;
+            overflow:hidden;
         }
         .producto-card:hover{
             transform:translateY(-5px);
             border-color:#12aaff44;box-shadow:0 12px 25px rgba(0,0,0,0.35);
         }
         .thumb{
-            width:100%;height:150px;border-radius:12px;margin-bottom:16px;
-            background:#181b23;background-size:contain;background-position:center;
-            background-repeat:no-repeat;position:relative;
+            width:100%;height:345px;border-radius:18px;margin:0;
+            background:#07111b;background-size:contain;background-position:center;
+            background-repeat:no-repeat;position:relative;overflow:hidden;
         }
         .badge-categoria{
-            position:absolute;top:10px;right:10px;
+            position:absolute;top:10px;right:10px;max-width:calc(100% - 20px);
             background:rgba(18,170,255,0.2);color: #fea917;
-            font-size:.7rem;padding:4px 10px;border-radius:20px;font-weight:600;
+            font-size:.68rem;padding:4px 9px;border-radius:20px;font-weight:700;
             text-transform:uppercase;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        }
+        .producto-meta{
+            display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+            color:#d8dee8;font-size:.78rem;font-weight:900;margin:0;
+        }
+        .producto-meta span{
+            display:inline-flex;align-items:center;gap:5px;line-height:1;
+            padding:7px 9px;border-radius:999px;
+            background:rgba(31,196,213,.22);
+            color:#d7fff9;
+            box-shadow:inset 0 0 0 1px rgba(93,255,208,.12);
+        }
+        .producto-meta .dot{
+            display:none;
         }
         .seller-name{
             display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;
             color:#0de0c9;font-size:.82rem;font-weight:800;
         }
-        .producto-card h3{font-size:1.1rem;margin-bottom:8px;color:#fff;}
-        .producto-card p{font-size:.9rem;color:#b4b4b4;margin-bottom:14px;}
-        .producto-footer{
-            display:flex;align-items:center;justify-content:space-between;margin-top:10px;
+        .producto-card h3{
+            font-size:1.12rem;line-height:1.18;margin:0;color:#fff;font-weight:950;
+            min-height:1.2em;display:-webkit-box;-webkit-line-clamp:2;
+            -webkit-box-orient:vertical;overflow:hidden;
         }
-        .precio{font-size:1.2rem;font-weight:700;color: #ffffff;}
+        .producto-card p{
+            font-size:.92rem;line-height:1.45;color:#b9c6d2;margin:0;
+            min-height:3.9em;
+            display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+            overflow:hidden;
+        }
+        .producto-footer{
+            display:grid;grid-template-columns:1fr;gap:12px;margin-top:0;align-self:end;
+        }
+        .precio{
+            display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+            font-size:1.55rem;font-weight:950;color:#ffffff;line-height:1;
+        }
+        .precio small{
+            color:#c9d4de;font-size:.78rem;font-weight:900;line-height:1.1;
+        }
         .producto-card button{
-            padding:10px 18px;background:linear-gradient(135deg, #ff8d0b, #fdaf28);
-            border:none;border-radius:10px;color: #0d0f14;font-size:.9rem;
-            font-weight:700;cursor: pointer;transition:.3s;
+            width:100%;min-height:44px;padding:10px 18px;
+            background:linear-gradient(135deg,#2fe7df,#087da4);
+            border:none;border-radius:999px;color:#ffffff;font-size:.95rem;
+            font-weight:950;cursor: pointer;transition:.3s;
+            box-shadow:0 10px 28px rgba(15,199,215,.20);
         }
         .producto-card button:hover{
-            background:#0d92d6; color: #fff;
-            box-shadow:0 5px 15px rgba(18,170,255,0.4);
+            background:linear-gradient(135deg,#53fff4,#0b91bd); color: #fff;
+            box-shadow:0 12px 30px rgba(18,170,255,0.34);
         }
         .producto-card button[disabled]{
             opacity:.55; cursor:not-allowed;
@@ -412,11 +477,13 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             .sidebar{width:100%;position:static;}
         }
         @media(max-width:768px){
-            .header{flex-direction:column;gap:10px;padding:15px 20px;}
+            body:not(.home-scroll-nav) .header{flex-direction:column;gap:10px;padding:15px 20px;}
             .categoria-header{flex-direction:column;align-items:flex-start;gap:10px;}
-            .categoria-titulo{font-size:1.7rem;}
+            .categoria-heading{gap:10px;}
+            .categoria-icon{width:36px;height:36px;border-radius:10px;}
+            .categoria-titulo{font-size:1.85rem;}
             .grid-productos{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
-            .search-bar{width:100%;}
+            body:not(.home-scroll-nav) .search-bar{width:100%;}
         }
         @media(max-width:480px){
             .grid-productos{grid-template-columns:1fr;}
@@ -424,10 +491,12 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             .producto-card button{width:100%;}
         }
     </style>
-    <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260601">
-    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
+    <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260611a">
+    <script src="assets/js/keyboard-scroll-fix.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-menu.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-enhance.js?v=20260611a" defer></script>
     <style>
-        .header .nav .btn-registro {
+        body:not(.home-scroll-nav) .header .nav .btn-registro {
             min-width: 140px !important;
             
             display: inline-flex !important;
@@ -437,9 +506,378 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
             border-radius: 10px !important;
         }
     </style>
-    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260611d">
+    <style>
+        /* Productos: navegacion abierta y catalogo al estilo de la referencia. */
+        .category-menu-toggle {
+            display: none !important;
+        }
+
+        body.productos-page {
+            background: #090b10;
+            overflow-x: hidden;
+        }
+
+        body.productos-page .container {
+            max-width: 1220px !important;
+            margin: 34px auto 48px !important;
+            padding: 0 18px !important;
+            gap: 26px !important;
+            align-items: flex-start !important;
+        }
+
+        body.productos-page .sidebar {
+            width: 245px !important;
+            position: sticky !important;
+            top: 106px !important;
+            padding: 18px !important;
+            border-radius: 8px !important;
+            background: #121722 !important;
+            border: 1px solid rgba(255, 255, 255, .10) !important;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .28) !important;
+        }
+
+        body.productos-page .sidebar h3 {
+            margin-bottom: 14px !important;
+            font-size: 1.05rem !important;
+        }
+
+        body.productos-page .sidebar ul {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        body.productos-page .sidebar ul li {
+            margin: 0 !important;
+            min-height: 40px !important;
+            padding: 9px 11px !important;
+            border-radius: 7px !important;
+            background: #1b202a !important;
+            color: #e7edf5 !important;
+            border: 1px solid rgba(255, 255, 255, .08) !important;
+            font-weight: 750 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        body.productos-page .sidebar ul li.active,
+        body.productos-page .sidebar ul li:hover {
+            background: #1b202a !important;
+            border-color: rgba(255, 172, 18, .55) !important;
+            color: #ffca55 !important;
+            box-shadow: none !important;
+        }
+
+        body.productos-page .productos {
+            flex: 1 1 auto !important;
+            width: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body.productos-page .categoria-header {
+            margin-bottom: 22px !important;
+        }
+
+        body.productos-page .categoria-icon {
+            display: none !important;
+        }
+
+        body.productos-page .categoria-titulo {
+            font-size: clamp(1.8rem, 4vw, 2.55rem) !important;
+            line-height: 1.08 !important;
+            color: #f8fafc !important;
+            background: none !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        body.productos-page .contador-productos {
+            border-radius: 999px !important;
+            background: rgba(255, 255, 255, .06) !important;
+            color: #c7d2df !important;
+        }
+
+        body.productos-page .grid-productos {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)) !important;
+            gap: 22px !important;
+        }
+
+        body.productos-page .producto-card {
+            display: flex !important;
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 12px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, .06) !important;
+            box-shadow: none !important;
+            backdrop-filter: blur(10px) !important;
+            transition: all .5s cubic-bezier(.175, .885, .32, 1.275) !important;
+            overflow: hidden !important;
+        }
+
+        body.productos-page .producto-card:hover {
+            transform: translateY(-5px) !important;
+            border-color: rgba(18, 170, 255, .28) !important;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, .35) !important;
+        }
+
+        body.productos-page .producto-card .thumb {
+            width: 100% !important;
+            aspect-ratio: 2 / 3 !important;
+            height: auto !important;
+            margin: 0 0 18px !important;
+            border-radius: 10px !important;
+            background-color: #151922 !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+        }
+
+        body.productos-page .producto-card .thumb::after {
+            content: '' !important;
+            position: absolute !important;
+            inset: 0 !important;
+            background: linear-gradient(135deg, rgba(18, 170, 255, .1), rgba(13, 224, 201, .05)) !important;
+            opacity: 0 !important;
+            transition: opacity .3s ease !important;
+        }
+
+        body.productos-page .producto-card:hover .thumb::after {
+            opacity: 1 !important;
+        }
+
+        body.productos-page .badge-categoria {
+            display: none !important;
+        }
+
+        body.productos-page .producto-meta {
+            display: none !important;
+        }
+
+        body.productos-page .seller-name {
+            display: none !important;
+        }
+
+        body.productos-page .producto-card h3 {
+            min-height: 0 !important;
+            margin: 0 0 8px !important;
+            color: #fff !important;
+            font-size: 1.22rem !important;
+            line-height: 1.2 !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+        }
+
+        body.productos-page .producto-card p {
+            min-height: 2.85em !important;
+            margin: 0 0 16px !important;
+            color: #bcbcbc !important;
+            font-size: .95rem !important;
+            line-height: 1.5 !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+        body.productos-page .producto-footer {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 12px !important;
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+        }
+
+        body.productos-page .precio {
+            display: block !important;
+            color: #ffffff !important;
+            font-size: 1.5rem !important;
+            font-weight: 800 !important;
+            text-shadow: 0 2px 5px rgba(13, 224, 201, .2) !important;
+        }
+
+        body.productos-page .precio small {
+            display: none !important;
+        }
+
+        body.productos-page .producto-card button {
+            width: auto !important;
+            min-height: 44px !important;
+            padding: 12px 25px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #ff9d0b, #df8f05) !important;
+            color: #0d0f14 !important;
+            font-size: .95rem !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+        }
+
+        @media (max-width: 900px) {
+            body.productos-page .container {
+                flex-direction: column !important;
+                margin-top: 22px !important;
+            }
+
+            body.productos-page .sidebar {
+                position: static !important;
+                width: 100% !important;
+            }
+
+            body.productos-page .sidebar ul {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                flex-direction: initial !important;
+                flex-wrap: initial !important;
+            }
+
+            body.productos-page .sidebar ul li {
+                flex: initial !important;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body.productos-page .container {
+                padding: 0 12px !important;
+                margin-top: 18px !important;
+                gap: 18px !important;
+            }
+
+            body.productos-page .sidebar {
+                min-height: 0 !important;
+                padding: 12px !important;
+                border-radius: 12px !important;
+                background: #121722 !important;
+                border: 1px solid rgba(255, 255, 255, .10) !important;
+                box-shadow: 0 10px 26px rgba(0, 0, 0, .28) !important;
+            }
+
+            body.productos-page .sidebar h3 {
+                margin-bottom: 10px !important;
+            }
+
+            body.productos-page .sidebar ul {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                height: auto !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            body.productos-page .sidebar ul li,
+            body.productos-page .sidebar ul li.cat {
+                display: flex !important;
+                min-height: 38px !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 8px 9px !important;
+                border-radius: 10px !important;
+                background: #1b202a !important;
+                border: 1px solid rgba(255, 255, 255, .08) !important;
+                color: #e8edf5 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                font-size: .72rem !important;
+                font-weight: 900 !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            body.productos-page .sidebar ul li span {
+                display: none !important;
+            }
+
+            body.productos-page .sidebar ul li.active {
+                background: #1b202a !important;
+                border-color: rgba(255, 168, 18, .55) !important;
+                color: #ffca55 !important;
+            }
+
+            body.productos-page .grid-productos {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 10px !important;
+            }
+
+            body.productos-page .producto-card .thumb {
+                aspect-ratio: 2 / 3 !important;
+                height: auto !important;
+            }
+
+            body.productos-page .producto-card {
+                padding: 8px !important;
+                border-radius: 12px !important;
+            }
+
+            body.productos-page .producto-card h3 {
+                font-size: .92rem !important;
+            }
+
+            body.productos-page .producto-card p {
+                font-size: .78rem !important;
+            }
+
+            body.productos-page .producto-card button {
+                min-height: 34px !important;
+                font-size: .78rem !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            html body.productos-page .container > .sidebar > ul#categoryMenuList,
+            html body.productos-page .container > .sidebar.categories-open > ul#categoryMenuList {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                overflow: visible !important;
+                pointer-events: auto !important;
+                transform: none !important;
+            }
+
+            html body.productos-page .container > .sidebar > ul#categoryMenuList > li.cat {
+                display: flex !important;
+                align-items: center !important;
+                min-height: 38px !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+                color: #e8edf5 !important;
+                background: #1b202a !important;
+                border: 1px solid rgba(255, 255, 255, .08) !important;
+            }
+
+            html body.productos-page .container > .sidebar > ul#categoryMenuList > li.cat.active {
+                background: #1b202a !important;
+                border-color: rgba(255, 168, 18, .55) !important;
+                color: #ffca55 !important;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="productos-page home-scroll-nav">
 
 <header class="header">
    <div class="logo">
@@ -453,7 +891,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
     <nav class="nav">
         <input type="text" class="search-bar" placeholder="🔍 Buscar productos..." id="searchInput">
         <a href="index.php"><i class="fas fa-home"></i> Inicio</a>
-        <a href="productos.php" style="color:#12aaff;"><i class="fas fa-box-open"></i> Productos</a>
+        <a href="productos.php"><i class="fas fa-box-open"></i> Productos</a>
         <a href="recargar.php"><i class="fas fa-coins"></i> Recargar</a>
         <a href="carrito.php"><i class="fas fa-shopping-cart"></i> Carrito<?php echo cartCount() > 0 ? ' (' . cartCount() . ')' : ''; ?></a>
 
@@ -466,10 +904,10 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
                 <i class="fas fa-wallet"></i>
                 S/ <?php echo number_format($saldo_actual, 2); ?>
             </span>
-            <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+            <a href="<?php echo $account_url; ?>"><i class="fas fa-th-large"></i> Mi cuenta</a>
             <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
         <?php else: ?>
-            <a href="login.php?redirect=<?php echo urlencode($currentUrl); ?>"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
             <a href="register.php" class="btn-registro"><i class="fas fa-user-plus"></i> Registrarse</a>
         <?php endif; ?>
     </nav>
@@ -478,8 +916,10 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 
 <div class="container">
     <aside class="sidebar">
-        <h3><i class="fas fa-filter"></i> Categorías</h3>
-        <ul>
+        <div class="category-menu-head">
+            <h3><i class="fas fa-filter"></i> Categorías</h3>
+        </div>
+        <ul id="categoryMenuList">
             <?php if (!empty($categorias)): ?>
                 <?php foreach ($categorias as $id => $cat): ?>
                     <li class="cat <?php echo ($id === $categoria_activa) ? 'active' : ''; ?>"
@@ -498,7 +938,10 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 
     <main class="productos">
         <div class="categoria-header">
-            <h1 class="categoria-titulo"><?php echo htmlspecialchars($titulo_categoria); ?></h1>
+            <div class="categoria-heading">
+                <span class="categoria-icon"><i class="fas fa-box-open"></i></span>
+                <h1 class="categoria-titulo"><?php echo htmlspecialchars($titulo_categoria); ?></h1>
+            </div>
             <div class="contador-productos">
                 <i class="fas fa-box"></i>
                 <?php echo $categoria_activa ? ($contador_categorias[$categoria_activa] ?? 0) : 0; ?> productos
@@ -517,8 +960,6 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
                         $pnom  = (string)$producto['nombre'];
                         $pprec = (float)$producto['precio'];
                         $pdesc = (string)($producto['descripcion'] ?? '');
-                        $sellerName = (string)($producto['tienda_nombre'] ?? $producto['vendedor_nombre'] ?? '');
-
                         $tipoVenta = strtoupper((string)($producto['tipo_venta'] ?? 'PERFIL'));
 
                         // Stock visible: preferimos stock real si viene de joins, si no, productos.stock, si no, "sin control".
@@ -536,23 +977,13 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 
                         $agotado = ($stockVisible !== null) ? ($stockVisible <= 0) : false;
 
-                        $badge = strtoupper((string)($producto['categoria'] ?? ''));
-                        if ($has_tipo_venta) $badge .= " • " . ($tipoVenta ?: 'PERFIL');
-                        if ($stockVisible !== null) $badge .= " • STOCK: " . (int)$stockVisible;
                     ?>
                     <div class="producto-card" data-product-id="<?php echo $pid; ?>">
-                        <div class="thumb" style="background-image:url('<?php echo htmlspecialchars($img); ?>');">
-                            <span class="badge-categoria">
-                                <?php echo htmlspecialchars($badge); ?>
-                            </span>
-                        </div>
-                        <?php if ($sellerName !== ''): ?>
-                            <div class="seller-name"><i class="fas fa-store"></i> <?php echo htmlspecialchars($sellerName); ?></div>
-                        <?php endif; ?>
+                        <div class="thumb" style="background-image:url('<?php echo htmlspecialchars($img); ?>');"></div>
                         <h3><?php echo htmlspecialchars($pnom); ?></h3>
                         <p><?php echo htmlspecialchars($pdesc); ?></p>
                         <div class="producto-footer">
-                            <div class="precio">S/ <?php echo number_format($pprec, 2); ?>/mes</div>
+                            <div class="precio">S/ <?php echo number_format($pprec, 2); ?></div>
 
                             <button
                               type="button"
@@ -622,6 +1053,7 @@ $currentUrl = basename($_SERVER['PHP_SELF']) . (!empty($_SERVER['QUERY_STRING'])
 
 // =================== COMPRA MODAL (con visto OK) ===================
 const userIsLogged  = <?php echo isLoggedIn() ? 'true' : 'false'; ?>;
+const accountUrl    = <?php echo json_encode($account_url, JSON_UNESCAPED_UNICODE); ?>;
 const userSaldo     = <?php echo $usuario_actual ? (float)$saldo_actual : 0; ?>;
 const redirectLogin = <?php echo json_encode('login.php?redirect='.$currentUrl, JSON_UNESCAPED_UNICODE); ?>;
 const csrfPurchase  = <?php echo json_encode($csrf_purchase, JSON_UNESCAPED_UNICODE); ?>;
@@ -789,7 +1221,7 @@ Contraseña: ${pass}${perfil ? "\nPerfil: "+perfil : ""}${pin ? "\nPIN: "+pin : 
   `;
 
   modal.querySelector('.btn-copy').addEventListener('click', ()=>copiarTexto(textoCopia));
-  modal.querySelector('.btn-go').addEventListener('click', ()=>window.location.href='user/dashboard.php');
+  modal.querySelector('.btn-go').addEventListener('click', ()=>window.location.href=accountUrl);
   modal.querySelector('.btn-close').addEventListener('click', ()=>cerrarModal(modal));
   modal.addEventListener('click', e => { if (e.target === modal) cerrarModal(modal); });
 }

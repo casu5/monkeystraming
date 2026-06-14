@@ -49,6 +49,9 @@ $uid = (int)($u['id'] ?? 0);
 if ($uid <= 0) {
     respond(['ok' => false, 'code' => 'NOT_LOGGED', 'message' => 'Sesion invalida.', 'redirect' => 'login.php'], 401);
 }
+$account_url = (($u['rol'] ?? $u['role'] ?? '') === 'admin')
+    ? 'admin/index.php'
+    : 'user/dashboard.php';
 
 if ($product_id <= 0) {
     respond(['ok' => false, 'code' => 'BAD_PRODUCT', 'message' => 'Producto invalido.'], 400);
@@ -354,7 +357,7 @@ try {
         'compra_id' => $compra_id,
         'cart_count' => function_exists('cartCount') ? cartCount() : 0,
         'saldo' => $_SESSION['user_saldo'],
-        'redirect' => 'user/dashboard.php',
+        'redirect' => $account_url,
         'purchase' => [
             'producto_id' => $product_id,
             'vendedor_id' => $vendedorId,

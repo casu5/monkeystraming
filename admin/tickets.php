@@ -758,7 +758,7 @@ $page_title = "Tickets - Admin - Monkeystraming";
             line-height: 1.5;
         }
     </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 

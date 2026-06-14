@@ -798,7 +798,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
     <link rel="stylesheet" href="assets/css/auth-responsive.css">
-    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
+    <script src="assets/js/keyboard-scroll-fix.js?v=20260610b" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610k">
 </head>
 <body>
 

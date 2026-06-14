@@ -16,6 +16,9 @@ $usuario_actual = getCurrentUser();
 if (!$usuario_actual) {
     redirect('login.php');
 }
+$account_url = (($usuario_actual['rol'] ?? $usuario_actual['role'] ?? '') === 'admin')
+    ? 'admin/index.php'
+    : 'user/dashboard.php';
 
 // Obtener métodos de pago activos
 $metodos_sql    = "SELECT * FROM metodos_pago WHERE activo = 1 ORDER BY orden ASC";
@@ -894,11 +897,13 @@ $recargas_recientes = $recargas_stmt->get_result();
             }
         }
     </style>
-    <link rel="stylesheet" href="assets/css/header-unificado.css">
-    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
-    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
+    <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260611a">
+    <script src="assets/js/keyboard-scroll-fix.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-menu.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-enhance.js?v=20260611a" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260611d">
 </head>
-<body>
+<body class="home-scroll-nav">
 
 <header class="header">
     <div class="logo">
@@ -908,7 +913,6 @@ $recargas_recientes = $recargas_stmt->get_result();
     <button type="button" class="mobile-nav-toggle" aria-label="Abrir menu" aria-expanded="false" onclick="(function(btn){var h=btn.closest('.header');var open=!(h&&h.classList.contains('mobile-menu-open'));if(h)h.classList.toggle('mobile-menu-open',open);document.body.classList.toggle('mobile-menu-open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',open?'Cerrar menu':'Abrir menu');var i=btn.querySelector('i');if(i)i.className=open?'fas fa-times':'fas fa-bars';})(this)">
         <i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>
     </button>
-
     <div class="nav-container">
         <nav class="nav">
             <input type="text" class="search-bar" placeholder="🔍 Buscar productos..." id="searchInput">
@@ -926,7 +930,7 @@ $recargas_recientes = $recargas_stmt->get_result();
                     <i class="fas fa-wallet"></i>
                     S/ <?php echo number_format($usuario_actual['saldo'], 2); ?>
                 </span>
-                <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+                <a href="<?php echo $account_url; ?>"><i class="fas fa-th-large"></i> Mi cuenta</a>
                 <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
             <?php else: ?>
                 <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>

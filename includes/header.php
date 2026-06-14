@@ -20,6 +20,9 @@ $usuario_actual = null;
 if (function_exists('isLoggedIn') && isLoggedIn()) {
     $usuario_actual = getCurrentUser();
 }
+$account_url = ($usuario_actual && (($usuario_actual['rol'] ?? $usuario_actual['role'] ?? '') === 'admin'))
+    ? $prefix . 'admin/index.php'
+    : $prefix . 'user/dashboard.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -214,12 +217,13 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
             }
         }
     </style>
-    <link rel="stylesheet" href="<?php echo $prefix; ?>assets/css/header-unificado.css">
-    <script src="<?php echo $prefix; ?>assets/js/mobile-menu.js?v=20260610" defer></script>
-    <script src="<?php echo $prefix; ?>assets/js/mobile-enhance.js?v=20260610" defer></script>
-    <link rel="stylesheet" href="<?php echo $prefix; ?>assets/css/mobile-urgent.css?v=20260610">
+    <link rel="stylesheet" href="<?php echo $prefix; ?>assets/css/header-unificado.css?v=20260611a">
+    <script src="<?php echo $prefix; ?>assets/js/keyboard-scroll-fix.js?v=20260611a" defer></script>
+    <script src="<?php echo $prefix; ?>assets/js/mobile-menu.js?v=20260611a" defer></script>
+    <script src="<?php echo $prefix; ?>assets/js/mobile-enhance.js?v=20260611a" defer></script>
+    <link rel="stylesheet" href="<?php echo $prefix; ?>assets/css/mobile-urgent.css?v=20260611d">
 </head>
-<body>
+<body class="home-scroll-nav">
 
 <header class="header">
     <div class="logo">
@@ -229,7 +233,6 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
     <button type="button" class="mobile-nav-toggle" aria-label="Abrir menu" aria-expanded="false" onclick="(function(btn){var h=btn.closest('.header');var open=!(h&&h.classList.contains('mobile-menu-open'));if(h)h.classList.toggle('mobile-menu-open',open);document.body.classList.toggle('mobile-menu-open',open);btn.classList.toggle('active',open);btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',open?'Cerrar menu':'Abrir menu');var i=btn.querySelector('i');if(i)i.className=open?'fas fa-times':'fas fa-bars';})(this)">
         <i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>
     </button>
-
     <div class="nav-container">
         <nav class="nav">
             <input type="text" class="search-bar" placeholder="🔍 Buscar productos..." id="searchInput">
@@ -247,7 +250,7 @@ if (function_exists('isLoggedIn') && isLoggedIn()) {
                     <i class="fas fa-wallet"></i>
                     S/ <?php echo number_format((float)$usuario_actual['saldo'], 2); ?>
                 </span>
-                <a href="<?php echo $prefix; ?>user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+                <a href="<?php echo $account_url; ?>"><i class="fas fa-th-large"></i> Mi cuenta</a>
                 <a href="<?php echo $prefix; ?>logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
             <?php else: ?>
                 <a href="<?php echo $prefix; ?>login.php"><i class="fas fa-sign-in-alt"></i> Login</a>

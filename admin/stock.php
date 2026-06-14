@@ -453,7 +453,7 @@ $page_title = "Stock - Admin - Monkeystraming";
       background:rgba(18,170,255,0.12);color:#12aaff;border:1px solid rgba(18,170,255,0.25)
     }
   </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 

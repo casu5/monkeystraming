@@ -329,7 +329,7 @@ $page_title = "Vendedores - Admin";
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
     @media(max-width:992px){.wrap{width:100%;margin-left:0;padding:82px 16px 24px}}
   </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 <?php renderAdminSidebar($conexion, 'vendedores.php'); ?>

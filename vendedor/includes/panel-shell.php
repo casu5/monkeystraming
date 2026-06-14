@@ -77,7 +77,7 @@ if (!function_exists('sellerPanelEnd')) {
         </div>
     </div>
 </main>
-<script src="../assets/js/mobile-enhance.js?v=20260610" defer></script>
+<script src="../assets/js/mobile-enhance.js?v=20260610h" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var toggle = document.getElementById('sidebarToggle');

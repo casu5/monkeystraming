@@ -55,13 +55,25 @@ $db_config = [
 
 
 
-$conexion = new mysqli(
+mysqli_report(MYSQLI_REPORT_OFF);
+
+$conexion = @new mysqli(
     $db_config['host'],
     $db_config['user'],
     $db_config['pass'],
     $db_config['name'],
     $db_config['port']
 );
+
+if ($conexion->connect_errno && $appEnv !== 'production' && $db_config['host'] === 'localhost') {
+    $conexion = @new mysqli(
+        $db_config['host'],
+        'root',
+        '',
+        $db_config['name'],
+        $db_config['port']
+    );
+}
 
 if ($conexion->connect_errno) {
     http_response_code(500);

@@ -107,6 +107,78 @@ $usuario_actual = null;
 if (isLoggedIn()) {
     $usuario_actual = getCurrentUser();
 }
+$account_url = ($usuario_actual && (($usuario_actual['rol'] ?? $usuario_actual['role'] ?? '') === 'admin'))
+    ? 'admin/index.php'
+    : 'user/dashboard.php';
+
+function homeTableExists(mysqli $cx, string $table): bool {
+    $t = $cx->real_escape_string($table);
+    $rs = $cx->query("SHOW TABLES LIKE '$t'");
+    return ($rs && $rs->num_rows > 0);
+}
+
+$hero_defaults = [
+    [
+        'title' => 'La mejor experiencia de streaming está aquí',
+        'subtitle' => 'Accede a miles de productos digitales con total seguridad, soporte 24/7 y los mejores precios del mercado.',
+        'button_text' => 'Explorar Catálogo',
+        'button_url' => 'productos.php',
+        'image_url' => 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80',
+    ],
+    [
+        'title' => 'Entretenimiento premium para todos',
+        'subtitle' => 'Encuentra cuentas, perfiles y servicios digitales listos para usar en minutos.',
+        'button_text' => 'Ver Productos',
+        'button_url' => 'productos.php',
+        'image_url' => 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80',
+    ],
+    [
+        'title' => 'Compra rápido y con soporte',
+        'subtitle' => 'Tu saldo, tus compras y tus accesos protegidos desde un solo lugar.',
+        'button_text' => 'Recargar Saldo',
+        'button_url' => 'recargar.php',
+        'image_url' => 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80',
+    ],
+    [
+        'title' => 'Ofertas digitales todos los días',
+        'subtitle' => 'Explora categorías, compara precios y compra el servicio que necesitas.',
+        'button_text' => 'Explorar Catálogo',
+        'button_url' => 'productos.php',
+        'image_url' => 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80',
+    ],
+    [
+        'title' => 'Tu tienda digital en un solo lugar',
+        'subtitle' => 'Streaming, software, música, IA y más productos digitales disponibles ahora.',
+        'button_text' => 'Comprar Ahora',
+        'button_url' => 'productos.php',
+        'image_url' => 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80',
+    ],
+];
+
+$hero_promo = null;
+if (homeTableExists($conexion, 'hero_promociones')) {
+    $promo_result = $conexion->query("SELECT title, subtitle, button_text, button_url, image_url FROM hero_promociones WHERE activo=1 AND starts_at <= NOW() AND ends_at > NOW() ORDER BY id DESC LIMIT 1");
+    if ($promo_result && ($promo_row = $promo_result->fetch_assoc())) {
+        $hero_promo = $promo_row;
+    }
+}
+
+$hero_slides = [];
+if (!$hero_promo && homeTableExists($conexion, 'hero_slides')) {
+    $slides_result = $conexion->query("SELECT title, subtitle, button_text, button_url, image_url FROM hero_slides WHERE activo=1 ORDER BY orden ASC, id ASC");
+    if ($slides_result) {
+        while ($slide = $slides_result->fetch_assoc()) {
+            $hero_slides[] = $slide;
+        }
+    }
+}
+if (!$hero_slides) {
+    $hero_slides = $hero_defaults;
+}
+
+$hero_items = $hero_promo ? [$hero_promo] : $hero_slides;
+$hero_is_promo = (bool)$hero_promo;
+$hero_first = $hero_items[0] ?? $hero_defaults[0];
 
 /**
  * Mapeo de nombres de producto -> imágenes (logos) desde internet
@@ -473,6 +545,25 @@ $imagenes_predef = [
             right: 30px;
         }
 
+        .carrusel-control {
+            display: none !important;
+        }
+
+        .hero-promo-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 153, 0, .18);
+            color: #ffae2c;
+            border: 1px solid rgba(255, 153, 0, .32);
+            font-weight: 900;
+            font-size: .86rem;
+            letter-spacing: .2px;
+        }
+
         /* Efectos de partículas */
         .hero-particles {
             position: absolute;
@@ -656,14 +747,14 @@ $imagenes_predef = [
 
         .grid-productos {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 30px;
         }
 
         .producto-card {
             background: rgba(255, 255, 255, 0.04);
-            padding: 25px;
-            border-radius: 18px;
+            padding: 12px;
+            border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(10px);
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -671,6 +762,8 @@ $imagenes_predef = [
             overflow: hidden;
             opacity: 0;
             animation: fadeInUp 0.6s ease forwards;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Estilo para producto encontrado en búsqueda */
@@ -682,25 +775,17 @@ $imagenes_predef = [
         }
 
         .producto-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: linear-gradient(135deg, #ff6d00, #ff9e00);
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            z-index: 2;
+            display: none;
         }
 
         .thumb {
             width: 100%;
-            height: 180px;
-            background: rgba(28, 31, 39, 0.7);
-            border-radius: 14px;
-            margin-bottom: 25px;
-            background-size: contain;
+            aspect-ratio: 2 / 3;
+            height: auto;
+            background: #151922;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
@@ -721,25 +806,29 @@ $imagenes_predef = [
         }
 
         .producto-card h3 {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
+            font-size: 1.22rem;
+            margin-bottom: 8px;
             color: #fff;
             font-weight: 600;
         }
 
         .producto-card p {
             color: #bcbcbc;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             font-size: 0.95rem;
             line-height: 1.5;
-            min-height: 45px;
+            min-height: 2.85em;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .producto-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
+            margin-top: auto;
         }
 
         .precio {
@@ -1053,11 +1142,79 @@ $imagenes_predef = [
             }
         }
     </style>
-    <link rel="stylesheet" href="assets/css/header-unificado.css">
-    <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
-    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
+    <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260611a">
+    <script src="assets/js/keyboard-scroll-fix.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-menu.js?v=20260611a" defer></script>
+    <script src="assets/js/mobile-enhance.js?v=20260611a" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260611d">
+    <style>
+        body.home-scroll-nav .productos .grid-productos {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+            gap: 30px !important;
+        }
+
+        body.home-scroll-nav .productos .producto-card {
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 12px !important;
+            border-radius: 14px !important;
+        }
+
+        body.home-scroll-nav .productos .producto-card .thumb {
+            aspect-ratio: 2 / 3 !important;
+            height: auto !important;
+            margin-bottom: 18px !important;
+            border-radius: 10px !important;
+            background-color: #151922 !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+        }
+
+        body.home-scroll-nav .productos .producto-card p {
+            min-height: 2.85em !important;
+            margin-bottom: 16px !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+        body.home-scroll-nav .productos .producto-badge,
+        body.home-scroll-nav .productos .badge-categoria {
+            display: none !important;
+        }
+
+        body.home-scroll-nav .productos .producto-footer {
+            margin-top: auto !important;
+        }
+
+        @media (max-width: 768px) {
+            body.home-scroll-nav .productos .grid-productos {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 12px !important;
+            }
+
+            body.home-scroll-nav .productos .producto-card {
+                padding: 8px !important;
+            }
+
+            body.home-scroll-nav .productos .producto-card .thumb {
+                aspect-ratio: 2 / 3 !important;
+                height: auto !important;
+                margin-bottom: 12px !important;
+            }
+        }
+
+        @media (max-width: 420px) {
+            body.home-scroll-nav .productos .producto-card .thumb {
+                aspect-ratio: 2 / 3 !important;
+                height: auto !important;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="home-scroll-nav">
 
 <header class="header">
     <div class="logo">
@@ -1085,7 +1242,7 @@ $imagenes_predef = [
                     <i class="fas fa-wallet"></i>
                     S/ <?php echo number_format($usuario_actual['saldo'], 2); ?>
                 </span>
-                <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+                <a href="<?php echo $account_url; ?>"><i class="fas fa-th-large"></i> Mi cuenta</a>
                 <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
             <?php else: ?>
                 <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>  
@@ -1148,12 +1305,16 @@ $imagenes_predef = [
 <section class="categorias">
     <div class="section-header">
         <h2><i class="fas fa-fire"></i> Categorías Populares</h2>
+        <button type="button" class="home-category-toggle" aria-expanded="false" aria-controls="homeCategoryGrid">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+            <span>Menú de categorías</span>
+        </button>
         <a href="productos.php" class="ver-todo">
             Ver todas <i class="fas fa-arrow-right"></i>
         </a>
     </div>
     
-    <div class="grid-categorias">
+    <div class="grid-categorias" id="homeCategoryGrid">
         <?php if (!empty($categorias_populares)): ?>
             <?php foreach($categorias_populares as $categoria): ?>
                 <div class="categoria-card" style="--cat-color: <?php echo $categoria['color'] ?? '#12aaff'; ?>">
@@ -1204,11 +1365,7 @@ $imagenes_predef = [
                      data-product-name="<?php echo htmlspecialchars($producto['nombre']); ?>"
                      data-product-desc="<?php echo htmlspecialchars($producto['descripcion_corta'] ?? ''); ?>"
                      style="animation-delay: <?php echo 0.1 * ($index + 1); ?>s;">
-                    <div class="thumb" style="background-image: url('<?php echo htmlspecialchars($img); ?>')">
-                        <?php if (!empty($producto['categoria_nombre'])): ?>
-                            <span class="producto-badge"><?php echo htmlspecialchars($producto['categoria_nombre']); ?></span>
-                        <?php endif; ?>
-                    </div>
+                    <div class="thumb" style="background-image: url('<?php echo htmlspecialchars($img); ?>')"></div>
                     <h3><?php echo htmlspecialchars($producto['nombre']); ?></h3>
                     <p><?php echo htmlspecialchars($producto['descripcion_corta'] ?? 'Sin descripción'); ?></p>
                     <div class="producto-footer">
@@ -1261,9 +1418,7 @@ $imagenes_predef = [
                          data-product-name="<?php echo htmlspecialchars($producto['nombre']); ?>"
                          data-product-desc="<?php echo htmlspecialchars($producto['descripcion_corta'] ?? ''); ?>"
                          style="animation-delay: <?php echo 0.1 * ($index + 1); ?>s;">
-                        <div class="thumb" style="background-image: url('<?php echo htmlspecialchars($img); ?>')">
-                            <span class="producto-badge"><?php echo htmlspecialchars($categoria['nombre']); ?></span>
-                        </div>
+                        <div class="thumb" style="background-image: url('<?php echo htmlspecialchars($img); ?>')"></div>
                         <h3><?php echo htmlspecialchars($producto['nombre']); ?></h3>
                         <p><?php echo htmlspecialchars($producto['descripcion_corta'] ?? 'Sin descripción'); ?></p>
                         <div class="producto-footer">
@@ -1323,14 +1478,81 @@ $imagenes_predef = [
 </footer>
 
 <script>
+const heroManagedItems = <?php echo json_encode($hero_items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+const heroManagedPromo = <?php echo $hero_is_promo ? 'true' : 'false'; ?>;
 // Script para el carrusel
 document.addEventListener('DOMContentLoaded', function() {
+    const homeCategorySection = document.querySelector('.categorias');
+    const homeCategoryToggle = document.querySelector('.home-category-toggle');
+    if (homeCategorySection && homeCategoryToggle) {
+        homeCategoryToggle.addEventListener('click', function() {
+            const open = !homeCategorySection.classList.contains('categories-open');
+            homeCategorySection.classList.toggle('categories-open', open);
+            homeCategoryToggle.classList.toggle('active', open);
+            homeCategoryToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+            const icon = homeCategoryToggle.querySelector('i');
+            if (icon) icon.className = open ? 'fas fa-times' : 'fas fa-bars';
+        });
+    }
+
+    function applyManagedHero() {
+        const carrusel = document.querySelector('.hero-carrusel');
+        const indicatorsWrap = document.querySelector('.carrusel-indicators');
+        const heroContent = document.querySelector('.hero-content');
+        const title = document.getElementById('heroTitle') || document.querySelector('.hero-content h1');
+        const subtitle = document.getElementById('heroSubtitle') || document.querySelector('.hero-content p');
+        const button = document.getElementById('heroButton') || document.querySelector('.hero-btn');
+        const items = Array.isArray(heroManagedItems) && heroManagedItems.length ? heroManagedItems : [];
+        if (!carrusel || !indicatorsWrap || !items.length) return;
+
+        carrusel.classList.toggle('hero-carrusel-promo', !!heroManagedPromo);
+        carrusel.innerHTML = '';
+        indicatorsWrap.innerHTML = '';
+
+        items.forEach(function(item, index) {
+            const slide = document.createElement('div');
+            slide.className = 'carrusel-slide' + (index === 0 ? ' active' : '');
+            slide.dataset.title = item.title || '';
+            slide.dataset.subtitle = item.subtitle || '';
+            slide.dataset.buttonText = item.button_text || 'Explorar Catálogo';
+            slide.dataset.buttonUrl = item.button_url || 'productos.php';
+            slide.style.backgroundImage = "url('" + String(item.image_url || '').replace(/'/g, "\\'") + "')";
+            carrusel.appendChild(slide);
+
+            const dot = document.createElement('div');
+            dot.className = 'carrusel-indicator' + (index === 0 ? ' active' : '');
+            dot.dataset.index = String(index);
+            indicatorsWrap.appendChild(dot);
+        });
+
+        if (heroManagedPromo && heroContent && !heroContent.querySelector('.hero-promo-pill')) {
+            const pill = document.createElement('span');
+            pill.className = 'hero-promo-pill';
+            pill.innerHTML = '<i class="fas fa-bolt"></i> Promoción activa';
+            heroContent.insertBefore(pill, heroContent.firstChild);
+        }
+
+        if (title) title.textContent = items[0].title || '';
+        if (subtitle) subtitle.textContent = items[0].subtitle || '';
+        if (button) {
+            button.setAttribute('href', items[0].button_url || 'productos.php');
+            button.innerHTML = '<i class="fas fa-rocket"></i> <span>' + (items[0].button_text || 'Explorar Catálogo') + '</span>';
+        }
+
+        document.querySelectorAll('.carrusel-control').forEach(function(control) {
+            control.remove();
+        });
+    }
+    applyManagedHero();
+
     const slides = document.querySelectorAll('.carrusel-slide');
     const indicators = document.querySelectorAll('.carrusel-indicator');
     const prevBtn = document.querySelector('.carrusel-control.prev');
     const nextBtn = document.querySelector('.carrusel-control.next');
     let currentSlide = 0;
     let slideInterval;
+    if (!slides.length) return;
 
     // Inicializar partículas
     initParticles();
@@ -1338,12 +1560,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para cambiar de slide
     function goToSlide(n) {
         slides[currentSlide].classList.remove('active');
-        indicators[currentSlide].classList.remove('active');
+        if (indicators[currentSlide]) indicators[currentSlide].classList.remove('active');
         
         currentSlide = (n + slides.length) % slides.length;
         
         slides[currentSlide].classList.add('active');
-        indicators[currentSlide].classList.add('active');
+        if (indicators[currentSlide]) indicators[currentSlide].classList.add('active');
+
+        const title = document.getElementById('heroTitle') || document.querySelector('.hero-content h1');
+        const subtitle = document.getElementById('heroSubtitle') || document.querySelector('.hero-content p');
+        const button = document.getElementById('heroButton') || document.querySelector('.hero-btn');
+        const buttonText = button ? button.querySelector('span') : null;
+        const slide = slides[currentSlide];
+        if (title) title.textContent = slide.dataset.title || '';
+        if (subtitle) subtitle.textContent = slide.dataset.subtitle || '';
+        if (button) button.setAttribute('href', slide.dataset.buttonUrl || 'productos.php');
+        if (buttonText) buttonText.textContent = slide.dataset.buttonText || 'Explorar Catálogo';
     }
 
     // Función para siguiente slide
@@ -1357,8 +1589,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners para controles
-    nextBtn.addEventListener('click', nextSlide);
-    prevBtn.addEventListener('click', prevSlide);
+    if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+    if (prevBtn) prevBtn.addEventListener('click', prevSlide);
 
     // Event listeners para indicadores
     indicators.forEach(indicator => {
@@ -1371,6 +1603,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Autoplay del carrusel
     function startInterval() {
+        if (slides.length < 2) return;
         slideInterval = setInterval(nextSlide, 5000);
     }
 
@@ -1578,6 +1811,7 @@ if (searchInput) {
 
 // =================== FUNCIÓN DE COMPRA (actualizada) ===================
 const userIsLogged = <?php echo isLoggedIn() ? 'true' : 'false'; ?>;
+const accountUrl = <?php echo json_encode($account_url, JSON_UNESCAPED_UNICODE); ?>;
 const userSaldo    = <?php echo $usuario_actual ? (float)$usuario_actual['saldo'] : 0; ?>;
 
 function cerrarModal(modal) {
@@ -1685,7 +1919,7 @@ async function ejecutarCompra(productId, btnPrincipal, btnCancelar) {
       return;
     }
 
-    window.location.href = j.redirect || 'user/dashboard.php';
+    window.location.href = j.redirect || accountUrl;
 
   } catch (e) {
     alert('Error de red o respuesta inválida del servidor.');

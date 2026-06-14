@@ -447,7 +447,7 @@ $adminEmail = $admin['email'] ?? '';
         .pager a{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.06);color:#fff;text-decoration:none}
         .pager .current{color:#12aaff;font-weight:900}
     </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 

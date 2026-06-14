@@ -38,6 +38,10 @@
         function setOpen(open) {
             header.classList.toggle('mobile-menu-open', open);
             document.body.classList.toggle('mobile-menu-open', open);
+            document.documentElement.classList.toggle('mobile-menu-open', open);
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
             toggle.classList.toggle('active', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             toggle.setAttribute('aria-label', open ? 'Cerrar menu' : 'Abrir menu');
@@ -46,7 +50,37 @@
                 : '<i class="fas fa-bars" aria-hidden="true"></i><span>Menu</span>';
         }
 
+        function repairStaleMenuState() {
+            if (header.classList.contains('mobile-menu-open')) return;
+            document.body.classList.remove('mobile-menu-open');
+            document.documentElement.classList.remove('mobile-menu-open');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Abrir menu');
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+
+        function isMobileHomeScrollNav() {
+            return document.body.classList.contains('home-scroll-nav') && window.innerWidth <= 760;
+        }
+
+        function setCompact(compact) {
+            if (!document.body.classList.contains('home-scroll-nav')) return;
+
+            document.body.classList.toggle('mobile-nav-compact', compact);
+            header.classList.toggle('mobile-nav-compact', compact);
+
+            if (!compact) {
+                setOpen(false);
+            }
+        }
+
         toggle.addEventListener('click', function () {
+            if (isMobileHomeScrollNav() && !document.body.classList.contains('mobile-nav-compact')) {
+                setCompact(true);
+            }
             setOpen(!document.body.classList.contains('mobile-menu-open'));
         });
 
@@ -64,9 +98,62 @@
             if (event.key === 'Escape') setOpen(false);
         });
 
+        window.addEventListener('pageshow', repairStaleMenuState);
+        window.addEventListener('focus', repairStaleMenuState);
+        repairStaleMenuState();
+
         window.addEventListener('resize', function () {
-            if (window.innerWidth > 760) setOpen(false);
+            if (window.innerWidth > 760) {
+                setOpen(false);
+                setCompact(false);
+                return;
+            }
+
+            if (document.body.classList.contains('home-scroll-nav')) {
+                setCompact(window.scrollY > 24);
+            }
         });
+
+        if (document.body.classList.contains('home-scroll-nav')) {
+            var lastScrollY = window.scrollY || 0;
+            var ticking = false;
+
+            setCompact(lastScrollY > 24);
+
+            function updateCompactFromScroll() {
+                var currentY = window.scrollY || 0;
+                var delta = currentY - lastScrollY;
+
+                if (window.innerWidth <= 760) {
+                    if (currentY <= 24 || delta < -10) {
+                        setCompact(false);
+                    } else if (currentY > 24) {
+                        setCompact(true);
+                    }
+                }
+
+                lastScrollY = currentY;
+            }
+
+            window.addEventListener('scroll', function () {
+                if (ticking) return;
+                ticking = true;
+
+                window.requestAnimationFrame(function () {
+                    updateCompactFromScroll();
+                    ticking = false;
+                });
+            }, { passive: true });
+
+            window.addEventListener('touchmove', function () {
+                updateCompactFromScroll();
+            }, { passive: true });
+
+            window.setInterval(function () {
+                if (!document.body.classList.contains('home-scroll-nav')) return;
+                updateCompactFromScroll();
+            }, 160);
+        }
     }
 
     if (document.readyState === 'loading') {

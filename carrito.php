@@ -6,6 +6,9 @@ requireLogin('/login.php');
 
 $page_title = "Carrito - Monkeystraming";
 $usuario_actual = getCurrentUser();
+$account_url = (($usuario_actual['rol'] ?? $usuario_actual['role'] ?? '') === 'admin')
+  ? 'admin/index.php'
+  : 'user/dashboard.php';
 
 if (empty($_SESSION['_csrf_purchase'])) {
     $_SESSION['_csrf_purchase'] = bin2hex(random_bytes(32));
@@ -144,11 +147,13 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
     .cart-modal-box h3{color:#fff;font-size:1.35rem;margin-bottom:9px}.cart-modal-box p{color:#b8b8b8;line-height:1.55;margin-bottom:20px}
     @media(max-width:850px){.grid{grid-template-columns:1fr}.item{grid-template-columns:1fr}.price{white-space:normal}}
   </style>
-  <link rel="stylesheet" href="assets/css/header-unificado.css">
-  <script src="assets/js/mobile-menu.js?v=20260610" defer></script>
-    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="assets/css/header-unificado.css?v=20260611a">
+  <script src="assets/js/keyboard-scroll-fix.js?v=20260611a" defer></script>
+  <script src="assets/js/mobile-menu.js?v=20260611a" defer></script>
+  <script src="assets/js/mobile-enhance.js?v=20260611a" defer></script>
+    <link rel="stylesheet" href="assets/css/mobile-urgent.css?v=20260611d">
 </head>
-<body>
+<body class="home-scroll-nav">
 <header class="header">
   <div class="logo">
     <img src="assets/img/monkylogo.png" alt="Monkeystraming Logo" class="logo-img">
@@ -171,7 +176,7 @@ unset($_SESSION['success_msg'], $_SESSION['error_msg']);
         <i class="fas fa-wallet"></i>
         S/ <?php echo number_format((float)($usuario_actual['saldo'] ?? 0), 2); ?>
       </span>
-      <a href="user/dashboard.php"><i class="fas fa-th-large"></i> Mi cuenta</a>
+      <a href="<?php echo $account_url; ?>"><i class="fas fa-th-large"></i> Mi cuenta</a>
       <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Salir</a>
     </nav>
   </div>
@@ -303,7 +308,7 @@ async function buyProduct(productId, item) {
 
     msg.style.color = '#34c759';
     msg.textContent = 'Compra completada. Redirigiendo...';
-    window.location.href = 'user/dashboard.php';
+    window.location.href = <?php echo json_encode($account_url, JSON_UNESCAPED_UNICODE); ?>;
   } catch (err) {
     msg.textContent = 'Error de red o servidor.';
     btn.disabled = false;
@@ -372,7 +377,7 @@ if (buyAllBtn) {
 
     cartMsg.style.color = '#34c759';
     cartMsg.textContent = 'Compra total completada. Redirigiendo...';
-    window.location.href = 'user/dashboard.php';
+    window.location.href = <?php echo json_encode($account_url, JSON_UNESCAPED_UNICODE); ?>;
   });
 }
 

@@ -368,7 +368,7 @@ textarea{min-height:120px;resize:vertical}
     flex-wrap: wrap;
 }
 </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610k">
 </head>
 <body>
 <?php

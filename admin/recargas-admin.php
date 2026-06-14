@@ -580,7 +580,7 @@ $adminEmail = $admin['email'] ?? '';
             th, td{min-width:120px}
         }
     </style>
-  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260610">
+  <link rel="stylesheet" href="../assets/css/mobile-urgent.css?v=20260612c">
 </head>
 <body>
 
